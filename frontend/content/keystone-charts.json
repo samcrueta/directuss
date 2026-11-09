@@ -1,0 +1,205 @@
+{
+  "section": {
+    "slug": "charts",
+    "title": "Advanced Graphs with KeystoneJS",
+    "description": "Level 8 turns live Keystone component records into an advanced graph dashboard. Query only the fields you need through the Keystone context, reduce the rows into chart-ready series on the server, and render responsive, accessible charts without exposing the service secret.",
+    "subtopicCopy": "Level 8 turns live Keystone component records into advanced, responsive graphs. Read only the fields the charts need through Keystone's server context, reduce the rows into chart-ready series, and keep the Lumina service secret out of the browser. The same lesson remains available at its standalone URL.",
+    "headerCopy": "Query live Keystone components through the server context, reduce them into chart-ready series, and render an advanced graph showcase without exposing the service secret.",
+    "cardDescription": "Query live Keystone component records through the server context, shape the series on the server, and render a responsive graph showcase without exposing the service secret."
+  },
+  "lesson": {
+    "slug": "advanced-graphs-from-live-keystone-components",
+    "title": "Advanced graphs from live Keystone components",
+    "outcome": "Choose the right graph, read Keystone efficiently through its context and generated GraphQL API, reduce component records into chart-ready series, and ship a dashboard that stays honest and readable in empty, offline, and large-data states.",
+    "mental_model": [
+      "**Keystone components are data too.** Every saved component is a row with a kind, status, surface, lesson, and timestamp — exactly the fields a chart needs.",
+      "**Read through the context, reduce on the server.** Keystone's `context.query` and `context.prisma` are server-only. Keep the Lumina secret server-side and send the browser a small shaped series rather than raw rows.",
+      "**The graph type is a decision.** Comparison wants bars, change over time wants lines or areas, distribution wants a histogram, and composition wants a small part-to-whole chart.",
+      "**A chart is a claim.** Label the axes, units, source, and time window. Add a text summary so the insight survives without colour or hover.",
+      "**Keystone's GraphQL API has no aggregate root field.** Group and count in a custom endpoint or server loader, or move heavier aggregation into Prisma's `groupBy` and cache the result."
+    ],
+    "steps": [
+      {
+        "title": "Frame the question",
+        "body": "Give every graph one job. “How are components split by status?” is a comparison. “When were components created?” is a trend. “Show every component’s code” belongs in a table, not a chart."
+      },
+      {
+        "title": "Choose the visual grammar",
+        "body": "Match the question to a chart family before writing code. Bars compare categories, lines show change, histograms reveal distribution, and donuts show composition only when the slices are few."
+      },
+      {
+        "title": "Read only the required fields",
+        "body": "Use the server-side context with `context.query`. Select `track` and `published` from lessons, plus `kind`, `status`, `surface`, and `createdAt` from components. Never pull names, descriptions, HTML, CSS, or learner session IDs into a chart."
+      },
+      {
+        "title": "Reduce the rows at the source",
+        "body": "Keystone's generated GraphQL schema is list-and-record oriented rather than an analytics API. Count statuses and kinds in the custom endpoint, then return only aggregates to the browser."
+      },
+      {
+        "title": "Bucket time series",
+        "body": "Turn `createdAt` timestamps into day, week, or month buckets and fill missing buckets with zero. Normalise time zones so a daily chart does not shift its peaks depending on where the reader lives."
+      },
+      {
+        "title": "Shape multi-series data",
+        "body": "Return a stable payload such as `{ labels, series }` from the server loader. Convert numeric strings, sort categories deliberately, and handle empty series before rendering."
+      },
+      {
+        "title": "Render responsively and accessibly",
+        "body": "Keep Recharts in a client component, wrap charts in `ResponsiveContainer`, provide titles and summaries, avoid relying on colour alone, and expose the same numbers in text or a table."
+      },
+      {
+        "title": "Handle the edges",
+        "body": "Distinguish “no components yet” from “Keystone did not answer.” Label sample data when the API is offline, explain truncation or sampling, and show a readable fallback when the query returns an unexpected shape."
+      },
+      {
+        "title": "Read the saved form table",
+        "body": "Load the newest data-table component saved in Keystone, validate that every row has a label and a finite number, and pass those rows straight into the chart. The form becomes the data source, not a screenshot."
+      }
+    ],
+    "graph_types": [
+      {
+        "name": "Bar or column",
+        "use_when": "Compare counts or totals across a small set of categories, such as components per kind or lessons per track.",
+        "watch_for": "Keep a zero baseline, sort by meaning rather than alphabetically, and avoid stacking too many series."
+      },
+      {
+        "name": "Line or area",
+        "use_when": "Show change over time, such as components created per day or published lessons per month.",
+        "watch_for": "Use a consistent interval, mark missing buckets, and make cumulative totals explicit in the title."
+      },
+      {
+        "name": "Stacked bar",
+        "use_when": "Show part-to-whole across categories over time, such as draft and published components per week.",
+        "watch_for": "Limit the number of segments and make sure the parts actually sum to the whole."
+      },
+      {
+        "name": "Donut or pie",
+        "use_when": "Show composition with two to five slices where the proportions are the main message.",
+        "watch_for": "Avoid tiny slices and never use a pie for trends or ranking across many categories."
+      },
+      {
+        "name": "Histogram",
+        "use_when": "Reveal the distribution of a numeric field, such as component code-size buckets.",
+        "watch_for": "State the bucket size and avoid changing bucket boundaries between refreshes."
+      },
+      {
+        "name": "Scatter plot",
+        "use_when": "Explore correlation between two measures, such as component code size against time spent editing.",
+        "watch_for": "Handle overplotting and remember that correlation is not causation."
+      },
+      {
+        "name": "KPI or metric card",
+        "use_when": "Lead with one headline number and give it context, such as components created this fortnight.",
+        "watch_for": "Include the comparison or trend; a number without a baseline is not an insight."
+      }
+    ],
+    "code": "// keystone.ts → server.extendExpressApp\napp.get('/api/lumina/charts', async (request, response) => {\n  requireSecret(request)\n  const context = (await commonContext.withRequest(request, response)).sudo()\n\n  const [lessons, components] = await Promise.all([\n    context.query.Lesson.findMany({ query: 'track published' }),\n    context.query.Component.findMany({\n      query: 'kind status surface createdAt'\n    })\n  ])\n\n  const byTrack = new Map()\n  for (const lesson of lessons) {\n    const track = lesson.track ?? 'foundations'\n    byTrack.set(track, (byTrack.get(track) ?? 0) + 1)\n  }\n\n  const byStatus = new Map()\n  for (const component of components) {\n    byStatus.set(component.status, (byStatus.get(component.status) ?? 0) + 1)\n  }\n\n  // The browser receives counts only: no names, code, or owner sessions.\n  response.json({\n    data: {\n      lessonsByTrack: [...byTrack].map(([name, value]) => ({ name, value })),\n      componentsByStatus: [...byStatus].map(([name, value]) => ({ name, value }))\n    }\n  })\n})\n",
+    "preview": "Live Keystone aggregates plus two responsive views of the newest editable table saved by the Level 7 data lab. Open the showcase for activity and distribution panels.",
+    "code_label": "Keystone custom endpoint",
+    "takeaway": "An advanced graph is a deliberate question, a bounded Keystone read, a server-side reduction, and a labelled claim. The chart library is the last and smallest part of the work.",
+    "knowledge_check": {
+      "question": "Where should Keystone component records be counted by status before the chart renders?",
+      "options": [
+        "In the server-side custom endpoint or loader, which reads the rows with the service secret and returns only aggregates",
+        "In the browser after downloading every component and its code",
+        "In a CSS media query",
+        "Only inside the Keystone admin panel"
+      ],
+      "answer": 0,
+      "explanation": "Keystone's generated GraphQL API exposes lists and records, not grouped aggregates. Count the records in the server context so the browser receives a small series and never receives draft names, component code, or owner sessions."
+    },
+    "deep_dive": [
+      {
+        "title": "When a table beats a graph",
+        "body": "Charts are for comparison, trend, distribution, and composition. If the reader needs exact values for many records, a sortable table is more honest and more useful than a crowded chart."
+      },
+      {
+        "title": "Aggregation beyond the GraphQL schema",
+        "body": "Keystone's generated schema has no aggregate root field. Reduce rows with `context.query` for small datasets, or use `context.prisma.$queryRaw` and Prisma `groupBy` inside a custom endpoint when the collection grows."
+      },
+      {
+        "title": "Time zones and missing buckets",
+        "body": "Group `createdAt` timestamps consistently, fill missing days or weeks with zero, and label the window. Without those steps, a quiet day looks like missing data and a local-time dashboard can disagree with the database."
+      },
+      {
+        "title": "Accessible charts",
+        "body": "Give every chart a heading, a short text summary, and a data table or list fallback. Do not encode meaning with colour alone, and make tooltips reachable by keyboard where the library allows it."
+      },
+      {
+        "title": "Large lists",
+        "body": "Set a time window, use `where` filters, paginate where necessary, and cache stable summaries. If a graph needs millions of rows, it usually needs a precomputed summary list rather than a bigger client-side reduce."
+      },
+      {
+        "title": "Draft content stays server-side",
+        "body": "The service secret can read draft components. Use it only in the custom endpoint or server loader, aggregate the rows there, and never forward names, descriptions, code, or owner sessions to the browser."
+      },
+      {
+        "title": "Empty, offline, and unexpected states",
+        "body": "“No components yet”, “Keystone is offline”, and “the query returned an unexpected shape” are different messages. Show the correct one, and label any sample data instead of silently rendering it as live."
+      }
+    ]
+  },
+  "showcase": {
+    "sourceLive": "Live from Keystone",
+    "sourceSample": "Sample data · Keystone offline",
+    "metrics": {
+      "lessons": {
+        "label": "Lessons"
+      },
+      "records": {
+        "label": "Components",
+        "hint": "Across the Keystone component lab"
+      },
+      "drafts": {
+        "label": "Draft components",
+        "hint": "Awaiting review"
+      },
+      "published": {
+        "label": "Published lessons"
+      }
+    },
+    "charts": {
+      "tracks": {
+        "title": "Lessons by track",
+        "description": "How the advanced Keystone course splits across foundations, components, and showcase.",
+        "empty": "No lessons found. Seed the Keystone course to publish the advanced lessons."
+      },
+      "status": {
+        "title": "Components by status",
+        "description": "Every component saved by the Keystone component lab.",
+        "empty": "No components yet. Run a Keystone lab to populate this chart."
+      },
+      "activity": {
+        "title": "Component activity",
+        "description": "Components created per day over the last 14 days.",
+        "empty": "No components in the last 14 days. Save a component to wake this chart up."
+      },
+      "distribution": {
+        "title": "Components by kind",
+        "description": "The component kinds learners build most often.",
+        "empty": "No component kinds yet. Save a component to populate this chart."
+      },
+      "table": {
+        "title": "Saved form data",
+        "description": "The newest numeric table saved from the Level 7 Keystone data-table lab.",
+        "empty": "Save a table in the Level 7 data lab to populate this chart."
+      },
+      "tableTrend": {
+        "title": "Editable data as a trend",
+        "description": "The same rows from the Keystone data table rendered as a responsive area chart.",
+        "empty": "Save a table in the Level 7 data lab to populate this chart."
+      }
+    },
+    "recordPlural": "components",
+    "recordSingular": "component",
+    "distributionSummary": "{total} components across {buckets} kinds.",
+    "heroTitle": "The Keystone Charts showcase",
+    "heroDescription": "Live views of the same Keystone instance: lesson and component aggregates plus two responsive charts from the editable numeric table. The page reads aggregate counts only — never draft names, component code, or learner sessions. Edit the table in Level 7, save it, and refresh to update both charts.",
+    "notes": [
+      "The loader calls a secret-protected Keystone endpoint that selects track and published from lessons, plus kind, status, surface, and createdAt from components. It reduces those rows into the small series shown above.",
+      "Keystone's generated GraphQL schema has no aggregate root field. The counts are produced inside the custom endpoint, and heavier dashboards can move that work into Prisma groupBy queries or a precomputed summary list.",
+      "If Keystone is offline, the page stays usable with a labelled sample dataset. The badge at the top tells you which source you are seeing.",
+      "The saved-form chart reads the newest data-table component created by the Level 7 Keystone lab. Save a new table there, then refresh this page to see the bars change."
+    ]
+  }
+}

@@ -1,0 +1,1276 @@
+{
+  "section": {
+    "slug": "payload-advanced",
+    "title": "Advanced Payload",
+    "description": "Seventeen UI/UX lessons that build real components and responsive charts with HTML, CSS, and JavaScript: relationships, blocks, arrays, access control, versions, live preview, and a learner-published showcase."
+  },
+  "trackLabels": {
+    "foundations": "Component Foundations",
+    "payload": "Payload Components",
+    "ship": "Ship & Showcase"
+  },
+  "lessons": [
+    {
+      "slug": "components-two-worlds",
+      "title": "Components, two worlds",
+      "sort": 1,
+      "track": "foundations",
+      "outcome": "Tell the difference between a Payload admin component and a public frontend component, and choose the right rendering boundary.",
+      "mental_model": [
+        "**Payload renders two surfaces.** The admin panel is a React/Next app you can replace piece by piece; your public frontend is a separate React surface that reads Payload data.",
+        "**Server Components are the default.** Add `'use client'` only when a component needs state, event handlers, effects, or browser APIs.",
+        "**Data flows one way.** Payload stores content and exposes it through the Local API or REST; your components decide how that content becomes UI."
+      ],
+      "lab": {
+        "kind": "component",
+        "componentKind": "card",
+        "surface": "public",
+        "publishable": true,
+        "title": "Build the bridge card",
+        "brief": "Start with a plain card. Give it a clear hierarchy, one action, and enough space to breathe. Then publish it to the showcase.",
+        "checklist": [
+          "The headline is the first thing you read",
+          "The body copy supports the headline",
+          "There is one obvious action",
+          "The action is reachable with the keyboard",
+          "The card still works at 360px wide"
+        ],
+        "hints": [
+          "Use the eyebrow for context, not a second headline.",
+          "A short body is easier to scan than a paragraph.",
+          "Use min-height on the action so it has a comfortable hit area.",
+          "Publish after saving and confirm the card appears in the gallery."
+        ],
+        "device": "desktop",
+        "starter": {
+          "html": "<article class=\"card\">\n  <p class=\"eyebrow\">Level 7</p>\n  <h2>Components, two worlds</h2>\n  <p>Payload owns the content. Your frontend owns the experience.</p>\n  <a class=\"card-action\" href=\"#\">Read the lesson</a>\n</article>",
+          "css": ":root {\n  --accent: #2563eb;\n  --ink: #0f172a;\n  --muted: #64748b;\n  --surface: #ffffff;\n  --border: #dbe3ef;\n  --radius: 14px;\n  --space: 24px;\n}\n\n* { box-sizing: border-box; }\n\nbody {\n  display: grid;\n  place-items: center;\n  min-height: 100vh;\n  margin: 0;\n  padding: 32px;\n  background: #f8fafc;\n  color: var(--ink);\n  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;\n}\n\n.card {\n  width: min(100%, 420px);\n  padding: var(--space);\n  border: 1px solid var(--border);\n  border-radius: var(--radius);\n  background: var(--surface);\n}\n\n.eyebrow {\n  margin: 0 0 8px;\n  color: var(--accent);\n  font-size: 12px;\n  font-weight: 700;\n  letter-spacing: 0.12em;\n  text-transform: uppercase;\n}\n\n.card h2 {\n  margin: 0 0 10px;\n  font-size: 28px;\n  line-height: 1.1;\n  letter-spacing: -0.03em;\n}\n\n.card p {\n  margin: 0 0 20px;\n  color: var(--muted);\n  line-height: 1.65;\n}\n\n.card-action {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-height: 44px;\n  padding: 0 18px;\n  border-radius: 10px;\n  background: var(--accent);\n  color: #ffffff;\n  font-weight: 600;\n  text-decoration: none;\n}\n\n.card-action:hover { filter: brightness(1.08); }\n.card-action:active { transform: translateY(1px); }\n.card-action:focus-visible { outline: 3px solid #93c5fd; outline-offset: 3px; }",
+          "js": "const action = document.querySelector(\".card-action\");\n\naction?.addEventListener(\"click\", (event) => {\n  event.preventDefault();\n  action.textContent = \"Showcase opened\";\n});"
+        },
+        "solution": {
+          "html": "<article class=\"card\">\n  <p class=\"eyebrow\">Level 7 · Components</p>\n  <h2>One content model, two rendering surfaces</h2>\n  <p>Payload owns the data and the admin. Your components own the public experience. Keep the boundary explicit and both sides stay simple.</p>\n  <a class=\"card-action\" href=\"#showcase\">\n    Explore the showcase <span aria-hidden=\"true\">→</span>\n  </a>\n</article>",
+          "css": ":root {\n  --accent: #4f46e5;\n  --ink: #0f172a;\n  --muted: #475569;\n  --surface: #ffffff;\n  --border: #dbe3ef;\n  --radius: 18px;\n  --space: 28px;\n  --shadow: 0 20px 45px rgba(15, 23, 42, 0.12);\n}\n\n* { box-sizing: border-box; }\n\nbody {\n  display: grid;\n  place-items: center;\n  min-height: 100vh;\n  margin: 0;\n  padding: 32px;\n  background:\n    radial-gradient(circle at 12% 18%, rgba(79, 70, 229, 0.12), transparent 38%),\n    #f8fafc;\n  color: var(--ink);\n  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;\n}\n\n.card {\n  position: relative;\n  width: min(100%, 460px);\n  padding: var(--space);\n  overflow: hidden;\n  border: 1px solid var(--border);\n  border-radius: var(--radius);\n  background: var(--surface);\n  box-shadow: var(--shadow);\n}\n\n.card::before {\n  position: absolute;\n  top: 0;\n  right: 0;\n  left: 0;\n  height: 5px;\n  background: var(--accent);\n  content: \"\";\n}\n\n.eyebrow {\n  margin: 0 0 10px;\n  color: var(--accent);\n  font-size: 12px;\n  font-weight: 750;\n  letter-spacing: 0.13em;\n  text-transform: uppercase;\n}\n\n.card h2 {\n  margin: 0 0 12px;\n  font-size: clamp(24px, 6vw, 32px);\n  line-height: 1.08;\n  letter-spacing: -0.035em;\n}\n\n.card p {\n  margin: 0 0 24px;\n  color: var(--muted);\n  line-height: 1.7;\n}\n\n.card-action {\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  min-height: 46px;\n  padding: 0 18px;\n  border-radius: 11px;\n  background: var(--accent);\n  color: #ffffff;\n  font-weight: 650;\n  text-decoration: none;\n  transition: filter 140ms ease, transform 140ms ease;\n}\n\n.card-action:hover { filter: brightness(1.08); }\n.card-action:active { transform: translateY(1px); }\n.card-action:focus-visible {\n  outline: 3px solid #a5b4fc;\n  outline-offset: 3px;\n}\n\n@media (max-width: 420px) {\n  body { padding: 20px; }\n  .card { padding: 22px; }\n  .card-action { width: 100%; justify-content: center; }\n}",
+          "js": "const action = document.querySelector(\".card-action\");\n\naction?.addEventListener(\"click\", (event) => {\n  event.preventDefault();\n  const arrow = action.querySelector(\"[aria-hidden='true']\");\n  if (arrow) arrow.textContent = \"✓\";\n  action.lastChild.textContent = \" Showcase opened\";\n});"
+        }
+      },
+      "takeaway": "Know which surface you are building on before you write the component; the rendering boundary is an architectural decision.",
+      "knowledge_check": {
+        "question": "Which component needs the 'use client' directive?",
+        "options": [
+          "A card that only renders text and links",
+          "A form that tracks input and handles submit",
+          "A server component that queries the Local API",
+          "A static hero section"
+        ],
+        "answer": 1,
+        "explanation": "Client components are required for state, event handlers, effects, and browser APIs. Static rendering and server-side data fetching can stay on the server."
+      },
+      "deep_dive": [
+        {
+          "title": "Admin vs frontend",
+          "body": "Admin components live under admin.components and render inside Payload. Frontend components live in your app and receive Payload data as props. They can share a design language, but they are different surfaces."
+        },
+        {
+          "title": "Server vs client",
+          "body": "Server Components can query the Local API directly and keep secrets on the server. Client Components receive serializable props and run in the browser. Move the boundary down the tree when only a small part needs interactivity."
+        },
+        {
+          "title": "Component paths",
+          "body": "Payload does not import admin components directly into the config. It resolves a file path through the generated import map, so a typo becomes a build-time problem you can catch early."
+        }
+      ]
+    },
+    {
+      "slug": "design-tokens-as-data",
+      "title": "Design tokens as data",
+      "sort": 2,
+      "track": "foundations",
+      "outcome": "Model a small token contract in Payload and render every component from the same variables.",
+      "mental_model": [
+        "**Tokens are the contract.** Color, radius, spacing, type scale, and elevation are data, not one-off styles.",
+        "**CSS variables are the bridge.** Payload stores values; React writes them onto a wrapper; CSS consumes them.",
+        "**Theme is a token, not a second stylesheet.** A light/dark switch should change values, not fork every component."
+      ],
+      "lab": {
+        "kind": "component",
+        "componentKind": "button",
+        "surface": "public",
+        "publishable": true,
+        "title": "Tune a token-driven button",
+        "brief": "Build the primary action with CSS custom properties. The same button should cover default, hover, active, focus-visible, disabled, and busy states.",
+        "checklist": [
+          "At least 44px tall",
+          "Hover and active feedback",
+          "Visible focus-visible ring",
+          "Disabled state is readable",
+          "Accent and text pass contrast"
+        ],
+        "hints": [
+          "Use spacing to reach the hit area instead of a larger font.",
+          "Declare the token contract on :root, then consume it with var().",
+          "A ghost button needs a visible boundary on focus.",
+          "Set aria-busy while the action is running so the state is announced."
+        ],
+        "device": "desktop",
+        "starter": {
+          "html": "<div class=\"button-row\">\n  <button class=\"button\" type=\"button\">Save changes</button>\n  <button class=\"button button--ghost\" type=\"button\" disabled>Disabled</button>\n</div>",
+          "css": ":root {\n  --accent: #2563eb;\n  --radius: 8px;\n  --space: 20px;\n}\n\n* { box-sizing: border-box; }\n\nbody {\n  display: grid;\n  place-items: center;\n  min-height: 100vh;\n  margin: 0;\n  padding: 32px;\n  background: #f8fafc;\n  color: #0f172a;\n  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;\n}\n\n.button-row {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n\n.button {\n  min-height: 44px;\n  padding: 0 var(--space);\n  border: 0;\n  border-radius: var(--radius);\n  background: var(--accent);\n  color: #ffffff;\n  font: inherit;\n  font-weight: 650;\n  cursor: pointer;\n}\n\n.button--ghost {\n  border: 1px solid #cbd5e1;\n  background: transparent;\n  color: #0f172a;\n}\n\n.button:disabled {\n  cursor: not-allowed;\n  opacity: 0.45;\n}",
+          "js": "const primary = document.querySelector(\".button:not(.button--ghost)\");\n\nprimary?.addEventListener(\"click\", () => {\n  const label = primary.textContent;\n  primary.setAttribute(\"aria-busy\", \"true\");\n  primary.disabled = true;\n  primary.textContent = \"Publishing…\";\n\n  window.setTimeout(() => {\n    primary.removeAttribute(\"aria-busy\");\n    primary.disabled = false;\n    primary.textContent = label;\n  }, 1100);\n});"
+        },
+        "solution": {
+          "html": "<div class=\"button-row\">\n  <button class=\"button\" type=\"button\">\n    <span class=\"button-label\">Publish component</span>\n    <span class=\"button-icon\" aria-hidden=\"true\">↗</span>\n  </button>\n  <button class=\"button button--ghost\" type=\"button\" disabled>Disabled</button>\n</div>",
+          "css": ":root {\n  --accent: #4f46e5;\n  --accent-strong: #4338ca;\n  --ink: #0f172a;\n  --muted: #475569;\n  --surface: #ffffff;\n  --border: #cbd5e1;\n  --radius: 12px;\n  --space: 24px;\n  --ring: #a5b4fc;\n}\n\n* { box-sizing: border-box; }\n\nbody {\n  display: grid;\n  place-items: center;\n  min-height: 100vh;\n  margin: 0;\n  padding: 32px;\n  background: #f8fafc;\n  color: var(--ink);\n  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;\n}\n\n.button-row {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 12px;\n}\n\n.button {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  gap: 8px;\n  min-height: 48px;\n  padding: 0 var(--space);\n  border: 1px solid transparent;\n  border-radius: var(--radius);\n  background: var(--accent);\n  color: #ffffff;\n  font: inherit;\n  font-weight: 700;\n  letter-spacing: -0.01em;\n  cursor: pointer;\n  transition: background 140ms ease, transform 140ms ease, box-shadow 140ms ease;\n}\n\n.button:hover { background: var(--accent-strong); }\n.button:active { transform: translateY(1px); }\n.button:focus-visible {\n  outline: 3px solid var(--ring);\n  outline-offset: 3px;\n}\n.button[aria-busy=\"true\"] {\n  cursor: progress;\n  opacity: 0.72;\n}\n.button-icon {\n  font-size: 15px;\n  line-height: 1;\n}\n\n.button--ghost {\n  border-color: var(--border);\n  background: transparent;\n  color: var(--ink);\n}\n\n.button--ghost:hover { background: #f1f5f9; }\n\n.button:disabled {\n  cursor: not-allowed;\n  opacity: 0.45;\n  transform: none;\n}\n\n@media (max-width: 460px) {\n  body { padding: 20px; }\n  .button-row { width: 100%; }\n  .button { width: 100%; }\n}",
+          "js": "const primary = document.querySelector(\".button:not(.button--ghost)\");\nconst label = primary?.querySelector(\".button-label\");\n\nprimary?.addEventListener(\"click\", () => {\n  if (primary.getAttribute(\"aria-busy\") === \"true\") return;\n\n  const previous = label?.textContent || \"Publish component\";\n  primary.setAttribute(\"aria-busy\", \"true\");\n  primary.disabled = true;\n  if (label) label.textContent = \"Publishing…\";\n\n  window.setTimeout(() => {\n    primary.removeAttribute(\"aria-busy\");\n    primary.disabled = false;\n    if (label) label.textContent = previous;\n  }, 1100);\n});"
+        }
+      },
+      "takeaway": "A small, explicit token contract keeps every component consistent without duplicating CSS.",
+      "knowledge_check": {
+        "question": "Why store design tokens in Payload instead of hard-coding them in each component?",
+        "options": [
+          "It makes the components render faster",
+          "It gives every component one source of truth for visual decisions",
+          "It removes the need for CSS",
+          "It automatically fixes contrast"
+        ],
+        "answer": 1,
+        "explanation": "Tokens create a shared contract. Changing a value in Payload updates every component that consumes the same variables, while contrast still needs to be tested."
+      },
+      "deep_dive": [
+        {
+          "title": "The token contract",
+          "body": "Start with the decisions every component shares: accent, background, foreground, muted text, radius, spacing, type scale, and shadow. Add more only when a real component needs them."
+        },
+        {
+          "title": "Payload admin variables",
+          "body": "Payload exposes its own CSS variables for the admin panel, such as elevation and theme colors. Custom admin components can use them so they adapt to the active theme automatically."
+        },
+        {
+          "title": "Contrast is not automatic",
+          "body": "A beautiful accent can still fail contrast. Check text on the background and the action label on the accent; aim for 4.5:1 for body text and 3:1 for large text and UI boundaries."
+        }
+      ]
+    },
+    {
+      "slug": "accessible-primitives",
+      "title": "Accessible primitives",
+      "sort": 3,
+      "track": "foundations",
+      "outcome": "Build a form that works with a keyboard, a screen reader, and a thumb.",
+      "mental_model": [
+        "**Labels are part of the control.** A placeholder is an example, not a label.",
+        "**Focus is a state.** `:focus-visible` tells keyboard users where they are without flashing a ring on every click.",
+        "**Feedback closes the loop.** A success or error message must be text, associated with the field, and announced."
+      ],
+      "lab": {
+        "kind": "component",
+        "componentKind": "contactForm",
+        "surface": "public",
+        "publishable": true,
+        "title": "Build the contact form",
+        "brief": "Add visible labels, the right input types, required fields, and a success message that does not reload the page. Test the form with the keyboard.",
+        "checklist": [
+          "Every field has a visible label",
+          "Email uses type=email",
+          "Required fields are marked",
+          "Submit shows a success message",
+          "Keyboard focus is visible"
+        ],
+        "hints": [
+          "Connect each label with for and id.",
+          "Use autocomplete=name and autocomplete=email.",
+          "role=\"status\" announces the success message without stealing focus.",
+          "Keep the form markup semantic: form, label, input, textarea, button."
+        ],
+        "device": "desktop",
+        "starter": {
+          "html": "<form class=\"contact-form\">\n  <h2>Send a message</h2>\n  <p>We usually reply within two working days.</p>\n  <label for=\"name\">Name</label>\n  <input id=\"name\" name=\"name\" type=\"text\" autocomplete=\"name\" required>\n  <label for=\"email\">Email</label>\n  <input id=\"email\" name=\"email\" type=\"email\" autocomplete=\"email\" required>\n  <label for=\"message\">Message</label>\n  <textarea id=\"message\" name=\"message\" rows=\"4\" required></textarea>\n  <button type=\"submit\">Send message</button>\n  <p class=\"form-status\" role=\"status\" aria-live=\"polite\"></p>\n</form>",
+          "css": "* { box-sizing: border-box; }\n\nbody {\n  display: grid;\n  place-items: center;\n  min-height: 100vh;\n  margin: 0;\n  padding: 32px;\n  background: #f8fafc;\n  color: #0f172a;\n  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;\n}\n\n.contact-form {\n  width: min(100%, 440px);\n  padding: 24px;\n  border: 1px solid #dbe3ef;\n  border-radius: 14px;\n  background: #ffffff;\n}\n\n.contact-form h2 { margin: 0 0 6px; }\n.contact-form p { margin: 0 0 18px; color: #64748b; }\n.contact-form label { display: block; margin: 14px 0 6px; font-weight: 600; }\n.contact-form input,\n.contact-form textarea {\n  width: 100%;\n  border: 1px solid #cbd5e1;\n  border-radius: 8px;\n  padding: 10px;\n  font: inherit;\n}\n.contact-form button {\n  width: 100%;\n  min-height: 44px;\n  margin-top: 18px;\n  border: 0;\n  border-radius: 9px;\n  background: #2563eb;\n  color: #ffffff;\n  font: inherit;\n  font-weight: 650;\n  cursor: pointer;\n}\n.form-status { min-height: 1.4em; margin-top: 12px; color: #15803d; }",
+          "js": "const form = document.querySelector(\".contact-form\");\nconst status = form?.querySelector(\".form-status\");\n\nform?.addEventListener(\"submit\", (event) => {\n  event.preventDefault();\n  if (!form.reportValidity()) return;\n\n  if (status) status.textContent = \"Message sent. We will reply within two working days.\";\n  form.reset();\n});"
+        },
+        "solution": {
+          "html": "<form class=\"contact-form\">\n  <p class=\"eyebrow\">Contact</p>\n  <h2>Let’s talk</h2>\n  <p class=\"intro\">Tell us what you are building. We will reply within two working days.</p>\n\n  <label for=\"name\">Name <span aria-hidden=\"true\">*</span></label>\n  <input id=\"name\" name=\"name\" type=\"text\" autocomplete=\"name\" required>\n\n  <label for=\"email\">Email <span aria-hidden=\"true\">*</span></label>\n  <input id=\"email\" name=\"email\" type=\"email\" autocomplete=\"email\" required>\n\n  <label for=\"message\">Message <span aria-hidden=\"true\">*</span></label>\n  <textarea id=\"message\" name=\"message\" rows=\"4\" required></textarea>\n\n  <button type=\"submit\">Send message</button>\n  <p class=\"form-status\" role=\"status\" aria-live=\"polite\"></p>\n</form>",
+          "css": ":root {\n  --accent: #4f46e5;\n  --accent-strong: #4338ca;\n  --ink: #0f172a;\n  --muted: #475569;\n  --surface: #ffffff;\n  --border: #cbd5e1;\n  --radius: 16px;\n  --ring: #c7d2fe;\n}\n\n* { box-sizing: border-box; }\n\nbody {\n  display: grid;\n  place-items: center;\n  min-height: 100vh;\n  margin: 0;\n  padding: 32px;\n  background:\n    radial-gradient(circle at 85% 12%, rgba(79, 70, 229, 0.12), transparent 32%),\n    #eef2ff;\n  color: var(--ink);\n  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;\n}\n\n.contact-form {\n  width: min(100%, 460px);\n  padding: 28px;\n  border: 1px solid var(--border);\n  border-radius: var(--radius);\n  background: var(--surface);\n  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.1);\n}\n\n.eyebrow {\n  margin: 0 0 6px;\n  color: var(--accent);\n  font-size: 11px;\n  font-weight: 750;\n  letter-spacing: 0.12em;\n  text-transform: uppercase;\n}\n\n.contact-form h2 {\n  margin: 0 0 8px;\n  font-size: 28px;\n  letter-spacing: -0.03em;\n}\n\n.intro {\n  margin: 0 0 18px;\n  color: var(--muted);\n  line-height: 1.6;\n}\n\n.contact-form label {\n  display: block;\n  margin: 14px 0 6px;\n  font-size: 14px;\n  font-weight: 650;\n}\n\n.contact-form label span { color: var(--accent); }\n\n.contact-form input,\n.contact-form textarea {\n  width: 100%;\n  border: 1px solid var(--border);\n  border-radius: 9px;\n  background: #ffffff;\n  color: var(--ink);\n  padding: 11px 12px;\n  font: inherit;\n  transition: border-color 140ms ease, box-shadow 140ms ease;\n}\n\n.contact-form textarea { resize: vertical; }\n\n.contact-form input:focus,\n.contact-form textarea:focus {\n  border-color: var(--accent);\n  box-shadow: 0 0 0 3px var(--ring);\n  outline: none;\n}\n\n.contact-form button {\n  width: 100%;\n  min-height: 48px;\n  margin-top: 20px;\n  border: 0;\n  border-radius: 10px;\n  background: var(--accent);\n  color: #ffffff;\n  font: inherit;\n  font-weight: 700;\n  cursor: pointer;\n  transition: background 140ms ease, transform 140ms ease;\n}\n\n.contact-form button:hover { background: var(--accent-strong); }\n.contact-form button:active { transform: translateY(1px); }\n.contact-form button:focus-visible {\n  outline: 3px solid var(--ring);\n  outline-offset: 3px;\n}\n\n.form-status {\n  min-height: 1.4em;\n  margin: 12px 0 0;\n  color: #15803d;\n  font-size: 13px;\n  font-weight: 600;\n}\n\n@media (max-width: 460px) {\n  body { padding: 18px; }\n  .contact-form { padding: 22px; }\n}",
+          "js": "const form = document.querySelector(\".contact-form\");\nconst status = form?.querySelector(\".form-status\");\n\nform?.addEventListener(\"submit\", (event) => {\n  event.preventDefault();\n  if (!form.reportValidity()) return;\n\n  if (status) status.textContent = \"Message sent. We will reply within two working days.\";\n  form.reset();\n});"
+        }
+      },
+      "takeaway": "Accessibility is not a final pass; it is the shape of the primitive itself.",
+      "knowledge_check": {
+        "question": "Which attributes connect a label to an input?",
+        "options": [
+          "for + id",
+          "placeholder + name",
+          "aria-hidden + type",
+          "class + role"
+        ],
+        "answer": 0,
+        "explanation": "The label's for attribute must match the input's id. Clicking the label then focuses the input, and screen readers announce them together."
+      },
+      "deep_dive": [
+        {
+          "title": "Labels vs placeholders",
+          "body": "A placeholder disappears after typing and cannot be relied on as a label. Keep a visible label above the field and use the placeholder for an example."
+        },
+        {
+          "title": "Focus-visible",
+          "body": "Use `:focus-visible` for the keyboard ring. It keeps the pointer experience clean while giving keyboard users a clear target. Never remove focus outlines without a replacement."
+        },
+        {
+          "title": "Status messages",
+          "body": "A `role=\"status\"` element announces polite updates such as “Message sent.” For errors, associate the message with the field and mark the field invalid."
+        }
+      ]
+    },
+    {
+      "slug": "custom-admin-components",
+      "title": "Custom admin components",
+      "sort": 4,
+      "track": "payload",
+      "outcome": "Replace a piece of the Payload admin with your own React component and keep the server/client boundary intact.",
+      "mental_model": [
+        "**`admin.components` is the extension point.** Root views, collection views, fields, and login screens all accept your components.",
+        "**Server components get the payload instance.** They can query the Local API and render data without a client round trip.",
+        "**Client components get serializable props.** Add `'use client'` only for interaction, and never pass secrets or the full config across the boundary."
+      ],
+      "lab": {
+        "kind": "component",
+        "componentKind": "adminStatCard",
+        "surface": "admin",
+        "publishable": false,
+        "title": "Build a dashboard stat card",
+        "brief": "Design a small card for the Payload dashboard. It should answer one question and link to the collection behind it. This lab is a visual prototype: real Payload admin views are React components.",
+        "checklist": [
+          "One number is the focus",
+          "The trend explains the number",
+          "The footnote adds context",
+          "It fits the admin's dark theme",
+          "No action is hidden behind a hover"
+        ],
+        "hints": [
+          "Use the accent for the trend, not the whole card.",
+          "Keep the label and footnote quiet.",
+          "A dashboard card should be readable at a glance.",
+          "The link is part of the card; make it visible without hovering."
+        ],
+        "device": "desktop",
+        "starter": {
+          "html": "<article class=\"stat-card\">\n  <span class=\"stat-icon\" aria-hidden=\"true\">◈</span>\n  <p class=\"stat-label\">Published components</p>\n  <p class=\"stat-value\" data-value=\"128\">128</p>\n  <p class=\"stat-delta\">+12 this week</p>\n  <p class=\"stat-footnote\">Across 8 lessons</p>\n</article>",
+          "css": ":root {\n  --accent: #f59e0b;\n  --surface: #17171a;\n  --ink: #f3f4f6;\n  --muted: #9ca3af;\n  --border: #2b2b31;\n  --radius: 12px;\n}\n\n* { box-sizing: border-box; }\n\nbody {\n  display: grid;\n  place-items: center;\n  min-height: 100vh;\n  margin: 0;\n  padding: 32px;\n  background: #0b0b0e;\n  color: var(--ink);\n  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;\n}\n\n.stat-card {\n  width: min(100%, 320px);\n  padding: 20px;\n  border: 1px solid var(--border);\n  border-radius: var(--radius);\n  background: var(--surface);\n}\n\n.stat-icon { color: var(--accent); font-size: 20px; }\n.stat-label { margin: 12px 0 4px; color: var(--muted); font-size: 13px; }\n.stat-value { margin: 0; font-size: 44px; font-weight: 750; letter-spacing: -0.04em; }\n.stat-delta { margin: 4px 0 0; color: var(--accent); font-size: 13px; font-weight: 650; }\n.stat-footnote { margin: 16px 0 0; color: var(--muted); font-size: 12px; }",
+          "js": "const value = document.querySelector(\".stat-value\");\nconst target = Number(value?.dataset.value || 0);\n\nif (value && target > 0) {\n  value.textContent = String(target);\n}"
+        },
+        "solution": {
+          "html": "<article class=\"stat-card\">\n  <div class=\"stat-top\">\n    <span class=\"stat-icon\" aria-hidden=\"true\">◈</span>\n    <span class=\"stat-trend\">↑ 12 this week</span>\n  </div>\n  <p class=\"stat-label\">Published components</p>\n  <p class=\"stat-value\" data-value=\"128\">0</p>\n  <p class=\"stat-footnote\">8 lessons · 4 featured</p>\n  <a class=\"stat-link\" href=\"#components\">View components <span aria-hidden=\"true\">→</span></a>\n</article>",
+          "css": ":root {\n  --accent: #fbbf24;\n  --surface: #17171a;\n  --surface-strong: #1f1f24;\n  --ink: #f9fafb;\n  --muted: #a1a1aa;\n  --border: #2b2b31;\n  --radius: 14px;\n  --ring: #fcd34d;\n}\n\n* { box-sizing: border-box; }\n\nbody {\n  display: grid;\n  place-items: center;\n  min-height: 100vh;\n  margin: 0;\n  padding: 32px;\n  background:\n    radial-gradient(circle at 80% 0%, rgba(251, 191, 36, 0.08), transparent 34%),\n    #0b0b0e;\n  color: var(--ink);\n  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;\n}\n\n.stat-card {\n  width: min(100%, 340px);\n  padding: 24px;\n  border: 1px solid var(--border);\n  border-radius: var(--radius);\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);\n}\n\n.stat-top {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n}\n\n.stat-icon {\n  display: grid;\n  width: 34px;\n  height: 34px;\n  place-items: center;\n  border: 1px solid rgba(251, 191, 36, 0.28);\n  border-radius: 9px;\n  background: rgba(251, 191, 36, 0.08);\n  color: var(--accent);\n  font-size: 17px;\n}\n\n.stat-trend {\n  border: 1px solid rgba(52, 211, 153, 0.25);\n  border-radius: 999px;\n  background: rgba(52, 211, 153, 0.08);\n  color: #6ee7b7;\n  font-size: 11px;\n  font-weight: 700;\n  padding: 4px 9px;\n}\n\n.stat-label {\n  margin: 18px 0 4px;\n  color: var(--muted);\n  font-size: 12px;\n  font-weight: 650;\n  letter-spacing: 0.06em;\n  text-transform: uppercase;\n}\n\n.stat-value {\n  margin: 0;\n  font-size: clamp(40px, 10vw, 52px);\n  font-weight: 800;\n  letter-spacing: -0.05em;\n  line-height: 1;\n}\n\n.stat-footnote {\n  margin: 10px 0 18px;\n  color: var(--muted);\n  font-size: 12px;\n}\n\n.stat-link {\n  display: inline-flex;\n  align-items: center;\n  gap: 7px;\n  color: var(--accent);\n  font-size: 13px;\n  font-weight: 700;\n  text-decoration: none;\n}\n\n.stat-link:hover { text-decoration: underline; }\n.stat-link:focus-visible {\n  outline: 2px solid var(--ring);\n  outline-offset: 4px;\n  border-radius: 3px;\n}\n\n@media (prefers-reduced-motion: reduce) {\n  .stat-value { transition: none; }\n}",
+          "js": "const value = document.querySelector(\".stat-value\");\nconst target = Number(value?.dataset.value || 0);\n\nif (value && target > 0) {\n  const reduced = window.matchMedia(\"(prefers-reduced-motion: reduce)\").matches;\n\n  if (reduced) {\n    value.textContent = String(target);\n  } else {\n    const start = performance.now();\n    const duration = 700;\n\n    const tick = (now) => {\n      const progress = Math.min(1, (now - start) / duration);\n      const eased = 1 - Math.pow(1 - progress, 3);\n      value.textContent = String(Math.round(target * eased));\n      if (progress < 1) requestAnimationFrame(tick);\n    };\n\n    requestAnimationFrame(tick);\n  }\n}"
+        }
+      },
+      "takeaway": "Admin customization is real application code: keep it small, server-first, and focused on the editor's job.",
+      "knowledge_check": {
+        "question": "Where do you register a custom Payload dashboard view?",
+        "options": [
+          "In the collection's fields array",
+          "In `admin.components.views.dashboard.Component`",
+          "In the database adapter",
+          "In `payload.config.ts` under `db`"
+        ],
+        "answer": 1,
+        "explanation": "Root views are registered under `admin.components.views`. The dashboard key replaces the default dashboard with your component path."
+      },
+      "deep_dive": [
+        {
+          "title": "Component paths and the import map",
+          "body": "Payload resolves custom components by file path, then generates an import map at `app/(payload)/admin/importMap.js`. Paths are relative to `admin.importMap.baseDir`, and named exports use a `#ExportName` suffix."
+        },
+        {
+          "title": "Server props",
+          "body": "Root views receive `initPageResult`, which includes `req`, `payload`, and `permissions`. Use `req.user` for access checks and the read-filtered `user` for anything you render or pass to a client component."
+        },
+        {
+          "title": "Performance",
+          "body": "Server components stream less JavaScript to the browser. Keep the client boundary small, memoize expensive work, and use `useFormFields` instead of `useFields` when you only need one field."
+        }
+      ]
+    },
+    {
+      "slug": "custom-field-components",
+      "title": "Custom field components",
+      "sort": 5,
+      "track": "payload",
+      "outcome": "Build a field component that reads and writes a Payload field value without breaking the form contract.",
+      "mental_model": [
+        "**The field owns value and change.** A custom field must call `setValue`; otherwise Payload never sees the edit.",
+        "**`useField` is the bridge.** It gives a client component the value and setter for its path.",
+        "**Validation belongs on the server.** UI hints help, but the field config and access control are the real boundary."
+      ],
+      "lab": {
+        "kind": "component",
+        "componentKind": "tokenField",
+        "surface": "admin",
+        "publishable": false,
+        "title": "Build a color token field",
+        "brief": "Create the field an editor uses to set the accent token. It needs a swatch, a hex value, a helper line, and a live preview. Real Payload field components are React; this lab prototypes the control.",
+        "checklist": [
+          "The control has a visible label",
+          "A swatch and hex value stay in sync",
+          "Helper text explains where the token is used",
+          "The control is keyboard reachable",
+          "The value is valid before save"
+        ],
+        "hints": [
+          "Use type=color for the picker and a text input for the hex value.",
+          "Validate with a hex pattern before updating the preview.",
+          "The helper text is part of the field, not decoration.",
+          "Use aria-invalid and a status message for invalid input."
+        ],
+        "device": "desktop",
+        "starter": {
+          "html": "<div class=\"token-field\">\n  <label class=\"token-label\" for=\"accent\">Accent color</label>\n  <div class=\"token-row\">\n    <input class=\"token-color\" id=\"accent\" type=\"color\" value=\"#4f46e5\">\n    <input class=\"token-hex\" id=\"accent-hex\" type=\"text\" value=\"#4f46e5\" aria-label=\"Accent color hex value\" spellcheck=\"false\">\n  </div>\n  <p class=\"token-helper\">Used for primary actions and focus rings.</p>\n</div>",
+          "css": ":root {\n  --surface: #17171a;\n  --ink: #f3f4f6;\n  --muted: #9ca3af;\n  --border: #2b2b31;\n  --accent: #4f46e5;\n}\n\n* { box-sizing: border-box; }\n\nbody {\n  display: grid;\n  place-items: center;\n  min-height: 100vh;\n  margin: 0;\n  padding: 32px;\n  background: #0b0b0e;\n  color: var(--ink);\n  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;\n}\n\n.token-field {\n  width: min(100%, 360px);\n  padding: 20px;\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  background: var(--surface);\n}\n\n.token-label { display: block; margin-bottom: 10px; color: var(--ink); font-size: 13px; font-weight: 650; }\n.token-row { display: flex; align-items: center; gap: 10px; }\n.token-color { width: 46px; height: 42px; border: 1px solid var(--border); border-radius: 8px; background: transparent; padding: 3px; }\n.token-hex { min-width: 0; flex: 1; border: 1px solid var(--border); border-radius: 8px; background: #101013; color: var(--ink); padding: 10px 11px; font: inherit; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }\n.token-helper { margin: 9px 0 0; color: var(--muted); font-size: 12px; }",
+          "js": "const color = document.querySelector(\".token-color\");\nconst hex = document.querySelector(\".token-hex\");\n\ncolor?.addEventListener(\"input\", () => {\n  if (hex) hex.value = color.value;\n});\n\nhex?.addEventListener(\"input\", () => {\n  if (color && /^#[0-9a-f]{6}$/i.test(hex.value.trim())) {\n    color.value = hex.value.trim();\n  }\n});"
+        },
+        "solution": {
+          "html": "<div class=\"token-field\">\n  <div class=\"token-head\">\n    <label class=\"token-label\" for=\"accent\">Accent color</label>\n    <span class=\"swatch\" aria-hidden=\"true\"></span>\n  </div>\n\n  <div class=\"token-row\">\n    <input class=\"token-color\" id=\"accent\" type=\"color\" value=\"#4f46e5\" aria-describedby=\"accent-help\">\n    <input class=\"token-hex\" id=\"accent-hex\" type=\"text\" value=\"#4F46E5\" maxlength=\"7\"\n      aria-label=\"Accent color hex value\" aria-describedby=\"accent-help\" spellcheck=\"false\">\n  </div>\n\n  <p class=\"token-helper\" id=\"accent-help\">Used for primary actions and focus rings.</p>\n  <p class=\"token-error\" role=\"status\" aria-live=\"polite\"></p>\n  <button class=\"token-button\" type=\"button\">Primary action</button>\n</div>",
+          "css": ":root {\n  --accent: #4f46e5;\n  --surface: #17171a;\n  --surface-strong: #1f1f24;\n  --ink: #f9fafb;\n  --muted: #a1a1aa;\n  --border: #2b2b31;\n  --radius: 14px;\n  --ring: #a5b4fc;\n}\n\n* { box-sizing: border-box; }\n\nbody {\n  display: grid;\n  place-items: center;\n  min-height: 100vh;\n  margin: 0;\n  padding: 32px;\n  background:\n    radial-gradient(circle at 18% 12%, rgba(79, 70, 229, 0.12), transparent 34%),\n    #0b0b0e;\n  color: var(--ink);\n  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;\n}\n\n.token-field {\n  width: min(100%, 380px);\n  padding: 22px;\n  border: 1px solid var(--border);\n  border-radius: var(--radius);\n  background: linear-gradient(180deg, var(--surface-strong), var(--surface));\n  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.3);\n}\n\n.token-head {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 12px;\n  margin-bottom: 12px;\n}\n\n.token-label {\n  color: var(--ink);\n  font-size: 13px;\n  font-weight: 700;\n}\n\n.swatch {\n  width: 26px;\n  height: 26px;\n  border: 1px solid rgba(255, 255, 255, 0.18);\n  border-radius: 8px;\n  background: var(--accent);\n  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.04);\n}\n\n.token-row {\n  display: flex;\n  align-items: center;\n  gap: 10px;\n}\n\n.token-color {\n  width: 48px;\n  height: 44px;\n  border: 1px solid var(--border);\n  border-radius: 9px;\n  background: transparent;\n  padding: 3px;\n  cursor: pointer;\n}\n\n.token-hex {\n  min-width: 0;\n  flex: 1;\n  border: 1px solid var(--border);\n  border-radius: 9px;\n  background: #101013;\n  color: var(--ink);\n  padding: 11px 12px;\n  font: inherit;\n  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;\n  letter-spacing: 0.04em;\n  text-transform: uppercase;\n}\n\n.token-color:focus-visible,\n.token-hex:focus-visible {\n  outline: 2px solid var(--ring);\n  outline-offset: 2px;\n}\n\n.token-hex[aria-invalid=\"true\"] {\n  border-color: #f87171;\n}\n\n.token-helper {\n  margin: 9px 0 0;\n  color: var(--muted);\n  font-size: 12px;\n  line-height: 1.5;\n}\n\n.token-error {\n  min-height: 1.3em;\n  margin: 5px 0 0;\n  color: #fca5a5;\n  font-size: 11px;\n}\n\n.token-button {\n  width: 100%;\n  min-height: 44px;\n  margin-top: 12px;\n  border: 0;\n  border-radius: 9px;\n  background: var(--accent);\n  color: #ffffff;\n  font: inherit;\n  font-weight: 700;\n  cursor: pointer;\n}\n\n.token-button:hover { filter: brightness(1.08); }\n.token-button:focus-visible {\n  outline: 2px solid var(--ring);\n  outline-offset: 3px;\n}",
+          "js": "const color = document.querySelector(\".token-color\");\nconst hex = document.querySelector(\".token-hex\");\nconst swatch = document.querySelector(\".swatch\");\nconst error = document.querySelector(\".token-error\");\nconst root = document.documentElement;\nconst validHex = /^#[0-9a-f]{6}$/i;\n\nfunction apply(value, syncHex) {\n  const normalized = value.toUpperCase();\n\n  if (color) color.value = normalized;\n  if (syncHex && hex) hex.value = normalized;\n  if (swatch) swatch.style.background = normalized;\n  if (error) error.textContent = \"\";\n  if (hex) hex.removeAttribute(\"aria-invalid\");\n  root.style.setProperty(\"--accent\", normalized);\n}\n\ncolor?.addEventListener(\"input\", () => apply(color.value, true));\n\nhex?.addEventListener(\"input\", () => {\n  const value = hex.value.trim();\n  if (validHex.test(value)) {\n    apply(value, false);\n  } else {\n    hex.setAttribute(\"aria-invalid\", \"true\");\n    if (error) error.textContent = \"Use a six-digit hex value, for example #4F46E5.\";\n  }\n});\n\napply(color?.value || \"#4f46e5\", true);"
+        }
+      },
+      "takeaway": "A custom field is a form control with a contract: render the value, emit the change, and leave authorization to the server.",
+      "knowledge_check": {
+        "question": "Which hook reads and writes a field value inside a client field component?",
+        "options": [
+          "useConfig",
+          "useField",
+          "useDocumentInfo",
+          "useLocale"
+        ],
+        "answer": 1,
+        "explanation": "`useField` returns the current value and `setValue` for the field at the supplied path. `useFormFields` is better when you only need to subscribe to one value without the setter."
+      },
+      "deep_dive": [
+        {
+          "title": "useField vs useFormFields",
+          "body": "`useField` is for the field's own control. `useFormFields` subscribes to one value from the whole form and is useful for conditional UI without re-rendering on every keystroke."
+        },
+        {
+          "title": "Field access vs validation",
+          "body": "Field access decides who can read or update a value. Validation decides whether the value is acceptable. They solve different problems; a custom UI does not replace either."
+        },
+        {
+          "title": "Cells and filters",
+          "body": "A field can also provide custom `Cell` and `Filter` components for the list view. Keep those lightweight and consistent with the edit control's vocabulary."
+        }
+      ]
+    },
+    {
+      "slug": "blocks-and-the-page-builder",
+      "title": "Blocks and the page builder",
+      "sort": 6,
+      "track": "payload",
+      "outcome": "Model a page as reusable blocks and render it with a one-to-one React registry.",
+      "mental_model": [
+        "**Blocks are typed rows.** Each block has a `blockType` and its own fields; the array preserves order.",
+        "**One block, one renderer.** A registry maps `blockType` to a component, so adding a block is a schema change plus a renderer.",
+        "**Structure stays in the CMS.** Editors compose and reorder; developers keep the rendering predictable."
+      ],
+      "lab": {
+        "kind": "component",
+        "componentKind": "page",
+        "surface": "public",
+        "publishable": true,
+        "title": "Compose a page from blocks",
+        "brief": "Build a page from distinct sections: a hero, a feature grid, a testimonial, and a call to action. Each block should stand on its own and survive a narrow screen.",
+        "checklist": [
+          "Each block has a clear purpose",
+          "The page follows a readable order",
+          "The feature grid wraps at 360px",
+          "The call to action is obvious",
+          "Every section has semantic markup"
+        ],
+        "hints": [
+          "Use section elements with aria-labelledby for each block.",
+          "A feature grid can be one rule: repeat(auto-fit, minmax(180px, 1fr)).",
+          "Keep one block, one visual idea.",
+          "Publish after saving and check the page preview in the showcase."
+        ],
+        "device": "desktop",
+        "starter": {
+          "html": "<main class=\"page\">\n  <section class=\"hero\">\n    <p class=\"eyebrow\">Payload pages</p>\n    <h1>Compose, do not hard-code</h1>\n    <p>Every section is a typed block. Editors reorder them; the frontend renders them in order.</p>\n    <a class=\"button\" href=\"#blocks\">See the blocks</a>\n  </section>\n\n  <section class=\"blocks\" id=\"blocks\">\n    <article class=\"block\">\n      <h2>Hero</h2>\n      <p>A block introduces the page.</p>\n    </article>\n  </section>\n</main>",
+          "css": "* { box-sizing: border-box; }\n\nbody {\n  margin: 0;\n  background: #f8fafc;\n  color: #0f172a;\n  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;\n}\n\n.page { width: min(100% - 40px, 900px); margin: 0 auto; padding: 40px 0; }\n.hero { padding: 40px; border-radius: 18px; background: #ffffff; }\n.eyebrow { margin: 0 0 8px; color: #4f46e5; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; }\n.hero h1 { margin: 0 0 12px; font-size: clamp(32px, 6vw, 56px); line-height: 1; letter-spacing: -0.04em; }\n.hero p { max-width: 560px; color: #475569; line-height: 1.7; }\n.button { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 10px; background: #4f46e5; color: #ffffff; font-weight: 650; text-decoration: none; }\n.blocks { margin-top: 18px; }\n.block { padding: 24px; border: 1px solid #dbe3ef; border-radius: 14px; background: #ffffff; }",
+          "js": "const link = document.querySelector(\".hero .button\");\n\nlink?.addEventListener(\"click\", (event) => {\n  const target = document.querySelector(link.getAttribute(\"href\"));\n  if (!target) return;\n  event.preventDefault();\n  target.scrollIntoView({ behavior: \"smooth\", block: \"start\" });\n});"
+        },
+        "solution": {
+          "html": "<main class=\"page\">\n  <section class=\"hero\" aria-labelledby=\"hero-title\">\n    <p class=\"eyebrow\">Payload pages</p>\n    <h1 id=\"hero-title\">Compose, do not hard-code</h1>\n    <p class=\"hero-copy\">Every section is a typed block. Editors reorder them; the frontend renders them in order. Structure lives in the CMS, presentation stays predictable.</p>\n    <a class=\"button\" href=\"#features\">See the blocks</a>\n  </section>\n\n  <section class=\"features\" id=\"features\" aria-labelledby=\"features-title\">\n    <div class=\"section-head\">\n      <p class=\"eyebrow\">Feature grid</p>\n      <h2 id=\"features-title\">Why blocks?</h2>\n    </div>\n    <div class=\"feature-grid\">\n      <article class=\"feature\">\n        <span class=\"feature-icon\" aria-hidden=\"true\">◇</span>\n        <h3>Typed</h3>\n        <p>Each block has its own schema and validation.</p>\n      </article>\n      <article class=\"feature\">\n        <span class=\"feature-icon\" aria-hidden=\"true\">◈</span>\n        <h3>Composable</h3>\n        <p>Editors decide the order without touching code.</p>\n      </article>\n      <article class=\"feature\">\n        <span class=\"feature-icon\" aria-hidden=\"true\">◉</span>\n        <h3>Predictable</h3>\n        <p>One block maps to one renderer.</p>\n      </article>\n    </div>\n  </section>\n\n  <section class=\"quote-block\" aria-label=\"Learner quote\">\n    <blockquote>“The page builder finally made our marketing pages feel like a system, not a pile of one-off layouts.”</blockquote>\n    <p>Ada Lovelace · Frontend engineer</p>\n  </section>\n\n  <section class=\"cta\" aria-labelledby=\"cta-title\">\n    <div>\n      <h2 id=\"cta-title\">Ready to build your own page?</h2>\n      <p>Start with a block, add the fields it needs, then publish.</p>\n    </div>\n    <a class=\"button button--light\" href=\"#top\">Back to the top</a>\n  </section>\n</main>",
+          "css": ":root {\n  --accent: #0f766e;\n  --accent-strong: #115e59;\n  --ink: #0f172a;\n  --muted: #475569;\n  --surface: #ffffff;\n  --border: #dbe3ef;\n  --radius: 18px;\n  --ring: #99f6e4;\n}\n\n* { box-sizing: border-box; }\n\nbody {\n  margin: 0;\n  background:\n    radial-gradient(circle at 8% 0%, rgba(15, 118, 110, 0.1), transparent 34%),\n    #f8fafc;\n  color: var(--ink);\n  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;\n}\n\n.page {\n  width: min(100% - 40px, 940px);\n  margin: 0 auto;\n  padding: 40px 0 56px;\n}\n\n.hero {\n  padding: clamp(28px, 6vw, 48px);\n  border: 1px solid var(--border);\n  border-radius: var(--radius);\n  background: linear-gradient(135deg, #ffffff 0%, #ecfdf5 100%);\n}\n\n.eyebrow {\n  margin: 0 0 9px;\n  color: var(--accent);\n  font-size: 11px;\n  font-weight: 800;\n  letter-spacing: 0.14em;\n  text-transform: uppercase;\n}\n\n.hero h1 {\n  max-width: 720px;\n  margin: 0 0 14px;\n  font-size: clamp(36px, 7vw, 64px);\n  line-height: 0.98;\n  letter-spacing: -0.055em;\n}\n\n.hero-copy {\n  max-width: 620px;\n  margin: 0 0 24px;\n  color: var(--muted);\n  font-size: 16px;\n  line-height: 1.7;\n}\n\n.button {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-height: 46px;\n  padding: 0 19px;\n  border-radius: 11px;\n  background: var(--accent);\n  color: #ffffff;\n  font-weight: 700;\n  text-decoration: none;\n}\n\n.button:hover { background: var(--accent-strong); }\n.button:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }\n\n.features { padding: 44px 0 8px; }\n.section-head { margin-bottom: 18px; }\n.section-head h2 { margin: 0; font-size: clamp(24px, 4vw, 34px); letter-spacing: -0.03em; }\n\n.feature-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));\n  gap: 14px;\n}\n\n.feature {\n  padding: 22px;\n  border: 1px solid var(--border);\n  border-radius: 14px;\n  background: var(--surface);\n}\n\n.feature-icon {\n  display: grid;\n  width: 32px;\n  height: 32px;\n  margin-bottom: 14px;\n  place-items: center;\n  border-radius: 9px;\n  background: rgba(15, 118, 110, 0.1);\n  color: var(--accent);\n}\n\n.feature h3 { margin: 0 0 7px; font-size: 17px; }\n.feature p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }\n\n.quote-block {\n  margin: 28px 0;\n  padding: 26px;\n  border-left: 4px solid var(--accent);\n  border-radius: 0 14px 14px 0;\n  background: #ffffff;\n}\n\n.quote-block blockquote {\n  margin: 0 0 10px;\n  font-size: clamp(18px, 3vw, 24px);\n  font-weight: 550;\n  line-height: 1.45;\n  letter-spacing: -0.02em;\n}\n\n.quote-block p {\n  margin: 0;\n  color: var(--muted);\n  font-size: 13px;\n}\n\n.cta {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 20px;\n  padding: 26px;\n  border-radius: var(--radius);\n  background: #0f172a;\n  color: #ffffff;\n}\n\n.cta h2 { margin: 0 0 6px; font-size: 22px; letter-spacing: -0.02em; }\n.cta p { margin: 0; color: #cbd5e1; font-size: 14px; }\n.button--light { background: #ffffff; color: #0f172a; white-space: nowrap; }\n.button--light:hover { background: #e2e8f0; }\n\n@media (max-width: 640px) {\n  .page { width: min(100% - 28px, 940px); padding-top: 22px; }\n  .cta { align-items: flex-start; flex-direction: column; }\n  .button--light { width: 100%; }\n}",
+          "js": "const link = document.querySelector(\".hero .button\");\n\nlink?.addEventListener(\"click\", (event) => {\n  const target = document.querySelector(link.getAttribute(\"href\"));\n  if (!target) return;\n  event.preventDefault();\n  target.scrollIntoView({ behavior: \"smooth\", block: \"start\" });\n});"
+        }
+      },
+      "takeaway": "Blocks turn a page into a small, typed component system that editors can compose without breaking the design.",
+      "knowledge_check": {
+        "question": "What identifies which schema a saved block uses?",
+        "options": [
+          "The block's array index",
+          "The blockType value",
+          "The block's title",
+          "The collection slug"
+        ],
+        "answer": 1,
+        "explanation": "Payload stores `blockType` using the block's slug. The renderer looks up that value to choose the React component."
+      },
+      "deep_dive": [
+        {
+          "title": "Block definitions",
+          "body": "Define blocks once and reference them where needed. Shared definitions keep the admin consistent and reduce the config sent to the client."
+        },
+        {
+          "title": "Validation",
+          "body": "Use `minRows`, `maxRows`, and required fields to catch empty pages before they publish. A page builder without guardrails becomes a layout lottery."
+        },
+        {
+          "title": "Rendering",
+          "body": "A registry keyed by `blockType` is enough for most teams. Unknown blocks should render nothing or a safe fallback, never crash the page."
+        }
+      ]
+    },
+    {
+      "slug": "build-payload-block-inspector",
+      "title": "Build a block inspector",
+      "sort": 7,
+      "track": "payload",
+      "outcome": "Design a Payload block inspector that helps editors identify, reorder, and configure blocks without losing page context.",
+      "mental_model": [
+        "**Blocks are authored structure.** The inspector should expose what a block is before exposing its fields.",
+        "**Position is content meaning.** Reordering must communicate where the block will land, not only provide arrows.",
+        "**Configuration is progressive.** Keep the overview compact and let editors open deeper settings when needed."
+      ],
+      "lab": {
+        "kind": "component",
+        "componentKind": "block-inspector",
+        "surface": "admin",
+        "publishable": false,
+        "title": "Build a block inspector",
+        "brief": "Create an inspector for a Payload page-builder block. Show the block type, position, configuration shortcut, and reorder affordances.",
+        "checklist": [
+          "Block type and position are visible",
+          "Reorder controls have accessible names",
+          "The selected block is distinct",
+          "Configuration opens without losing context",
+          "The inspector works below 480px"
+        ],
+        "starter": {
+          "html": "<section class=\"panel\" aria-labelledby=\"panel-title\"><div class=\"panel-head\"><div><p class=\"eyebrow\">CMS field view</p><h2 id=\"panel-title\">Feature grid block</h2><p>A Payload page-builder block selected for editing.</p></div><span class=\"badge\">position 2 of 5</span></div><div class=\"rows\"><div class=\"row\"><span>Selected</span><strong>1</strong></div><div class=\"row\"><span>Position</span><strong>2</strong></div></div><button class=\"action\" type=\"button\">Open details</button></section>",
+          "css": "body{margin:0;background:#f4f7fb;color:#172940;font-family:Inter,system-ui,sans-serif}.panel{width:min(100%,520px);margin:24px auto;padding:24px;border:1px solid #dfe7f1;border-radius:16px;background:#fff;box-shadow:0 16px 40px rgba(15,23,42,.1)}.panel-head{display:flex;justify-content:space-between;gap:16px}.eyebrow{margin:0 0 6px;color:#2563eb;font-size:12px;text-transform:uppercase;letter-spacing:.08em}.panel h2{margin:0}.panel p{color:#64748b;line-height:1.5}.badge{padding:6px 10px;border-radius:999px;background:#2563eb;color:#fff;font-size:12px;white-space:nowrap}.rows{display:grid;gap:8px;margin:20px 0}.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e8edf3}.action{border:0;border-radius:8px;padding:10px 14px;background:#2563eb;color:#fff;font-weight:600}.action:focus-visible{outline:3px solid #111827;outline-offset:3px}",
+          "js": "console.log('block-inspector ready')"
+        },
+        "hints": [
+          "Use a block label such as Hero or Feature grid.",
+          "Disable or hide reorder controls at the list boundaries.",
+          "Keep destructive remove separate from reorder."
+        ],
+        "device": "responsive"
+      },
+      "takeaway": "Design a Payload block inspector that helps editors identify, reorder, and configure blocks without losing page context.",
+      "knowledge_check": {
+        "question": "What makes this CMS-specific?",
+        "options": [
+          "Use the CMS-supported field behavior and its real state",
+          "Hide all state from the editor",
+          "Use color without text",
+          "Hard-code the value in CSS"
+        ],
+        "answer": 0,
+        "explanation": "The component should reflect the CMS feature and preserve clear, editable state."
+      },
+      "deep_dive": [
+        {
+          "title": "State is part of the schema",
+          "body": "A useful admin component reflects the data shape and the CMS state instead of hiding important context behind decoration."
+        },
+        {
+          "title": "Responsive editing",
+          "body": "Admin interfaces should keep labels and actions reachable when the viewport becomes narrow."
+        },
+        {
+          "title": "Accessible controls",
+          "body": "Use labels, focus styles, and text alternatives so the component remains understandable without color or hover."
+        }
+      ]
+    },
+    {
+      "slug": "design-payload-array-editor",
+      "title": "Design an array field editor",
+      "sort": 8,
+      "track": "payload",
+      "outcome": "Create a Payload array-field editor that makes repeated items easy to add, reorder, duplicate, and remove.",
+      "mental_model": [
+        "**Repeated fields need identity.** Every item should have a useful summary so editors can find it again.",
+        "**Mutation should preserve confidence.** Add, move, duplicate, and remove actions need immediate, specific feedback.",
+        "**Structure should survive narrow layouts.** Repeated items can stack while their controls remain reachable."
+      ],
+      "lab": {
+        "kind": "component",
+        "componentKind": "array-editor",
+        "surface": "admin",
+        "publishable": false,
+        "title": "Design an array field editor",
+        "brief": "Build a compact editor for repeated Payload testimonials. Keep item identity visible and make the add, move, duplicate, and remove actions predictable.",
+        "checklist": [
+          "Each item has a summary label",
+          "Add item is easy to find",
+          "Move controls expose direction",
+          "Remove action is distinguishable",
+          "The editor stacks cleanly on mobile"
+        ],
+        "starter": {
+          "html": "<section class=\"panel\" aria-labelledby=\"panel-title\"><div class=\"panel-head\"><div><p class=\"eyebrow\">CMS field view</p><h2 id=\"panel-title\">Testimonials</h2><p>Repeated Payload array items with stable summaries.</p></div><span class=\"badge\">3 items</span></div><div class=\"rows\"><div class=\"row\"><span>Mina · Product lead</span><strong>1</strong></div><div class=\"row\"><span>Jon · Founder</span><strong>1</strong></div><div class=\"row\"><span>Ari · Designer</span><strong>1</strong></div></div><button class=\"action\" type=\"button\">Open details</button></section>",
+          "css": "body{margin:0;background:#f4f7fb;color:#172940;font-family:Inter,system-ui,sans-serif}.panel{width:min(100%,520px);margin:24px auto;padding:24px;border:1px solid #dfe7f1;border-radius:16px;background:#fff;box-shadow:0 16px 40px rgba(15,23,42,.1)}.panel-head{display:flex;justify-content:space-between;gap:16px}.eyebrow{margin:0 0 6px;color:#7c3aed;font-size:12px;text-transform:uppercase;letter-spacing:.08em}.panel h2{margin:0}.panel p{color:#64748b;line-height:1.5}.badge{padding:6px 10px;border-radius:999px;background:#7c3aed;color:#fff;font-size:12px;white-space:nowrap}.rows{display:grid;gap:8px;margin:20px 0}.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e8edf3}.action{border:0;border-radius:8px;padding:10px 14px;background:#7c3aed;color:#fff;font-weight:600}.action:focus-visible{outline:3px solid #111827;outline-offset:3px}",
+          "js": "console.log('array-editor ready')"
+        },
+        "hints": [
+          "Use a person name or quote excerpt as the item summary.",
+          "Place repeated-item controls near the item heading.",
+          "Ask for confirmation only for destructive removal."
+        ],
+        "device": "responsive"
+      },
+      "takeaway": "Create a Payload array-field editor that makes repeated items easy to add, reorder, duplicate, and remove.",
+      "knowledge_check": {
+        "question": "What makes this CMS-specific?",
+        "options": [
+          "Use the CMS-supported field behavior and its real state",
+          "Hide all state from the editor",
+          "Use color without text",
+          "Hard-code the value in CSS"
+        ],
+        "answer": 0,
+        "explanation": "The component should reflect the CMS feature and preserve clear, editable state."
+      },
+      "deep_dive": [
+        {
+          "title": "State is part of the schema",
+          "body": "A useful admin component reflects the data shape and the CMS state instead of hiding important context behind decoration."
+        },
+        {
+          "title": "Responsive editing",
+          "body": "Admin interfaces should keep labels and actions reachable when the viewport becomes narrow."
+        },
+        {
+          "title": "Accessible controls",
+          "body": "Use labels, focus styles, and text alternatives so the component remains understandable without color or hover."
+        }
+      ]
+    },
+    {
+      "slug": "build-payload-access-banner",
+      "title": "Build an access-control banner",
+      "sort": 9,
+      "track": "payload",
+      "outcome": "Design a Payload access-control banner that explains draft, published, and restricted states without pretending the user can perform unavailable actions.",
+      "mental_model": [
+        "**Access decisions shape actions.** The banner should reflect what Payload allows instead of rendering every button optimistically.",
+        "**Draft and published are different truths.** State labels should explain visibility and editability separately.",
+        "**The next action should be honest.** Link to request access, preview, or return to the list rather than showing a dead control."
+      ],
+      "lab": {
+        "kind": "component",
+        "componentKind": "access-banner",
+        "surface": "admin",
+        "publishable": false,
+        "title": "Build an access-control banner",
+        "brief": "Compose a banner for a Payload document whose access result changes by role and publication state. Give editors a clear next action for each state.",
+        "checklist": [
+          "Draft and published states are distinct",
+          "Restricted users get an honest next step",
+          "Actions match the access state",
+          "The banner is readable by screen readers",
+          "The banner does not rely on color alone"
+        ],
+        "starter": {
+          "html": "<section class=\"panel\" aria-labelledby=\"panel-title\"><div class=\"panel-head\"><div><p class=\"eyebrow\">CMS field view</p><h2 id=\"panel-title\">Article access</h2><p>Payload visibility and access status for an editor.</p></div><span class=\"badge\">state</span></div><div class=\"rows\"><div class=\"row\"><span>Draft</span><strong>1</strong></div><div class=\"row\"><span>Published</span><strong>0</strong></div><div class=\"row\"><span>Restricted</span><strong>0</strong></div></div><button class=\"action\" type=\"button\">Open details</button></section>",
+          "css": "body{margin:0;background:#f4f7fb;color:#172940;font-family:Inter,system-ui,sans-serif}.panel{width:min(100%,520px);margin:24px auto;padding:24px;border:1px solid #dfe7f1;border-radius:16px;background:#fff;box-shadow:0 16px 40px rgba(15,23,42,.1)}.panel-head{display:flex;justify-content:space-between;gap:16px}.eyebrow{margin:0 0 6px;color:#c2410c;font-size:12px;text-transform:uppercase;letter-spacing:.08em}.panel h2{margin:0}.panel p{color:#64748b;line-height:1.5}.badge{padding:6px 10px;border-radius:999px;background:#c2410c;color:#fff;font-size:12px;white-space:nowrap}.rows{display:grid;gap:8px;margin:20px 0}.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e8edf3}.action{border:0;border-radius:8px;padding:10px 14px;background:#c2410c;color:#fff;font-weight:600}.action:focus-visible{outline:3px solid #111827;outline-offset:3px}",
+          "js": "console.log('access-banner ready')"
+        },
+        "hints": [
+          "Use role and visibility as separate pieces of copy.",
+          "Avoid saying “saved” when only a draft exists.",
+          "Keep the main action short and specific."
+        ],
+        "device": "responsive"
+      },
+      "takeaway": "Design a Payload access-control banner that explains draft, published, and restricted states without pretending the user can perform unavailable actions.",
+      "knowledge_check": {
+        "question": "What makes this CMS-specific?",
+        "options": [
+          "Use the CMS-supported field behavior and its real state",
+          "Hide all state from the editor",
+          "Use color without text",
+          "Hard-code the value in CSS"
+        ],
+        "answer": 0,
+        "explanation": "The component should reflect the CMS feature and preserve clear, editable state."
+      },
+      "deep_dive": [
+        {
+          "title": "State is part of the schema",
+          "body": "A useful admin component reflects the data shape and the CMS state instead of hiding important context behind decoration."
+        },
+        {
+          "title": "Responsive editing",
+          "body": "Admin interfaces should keep labels and actions reachable when the viewport becomes narrow."
+        },
+        {
+          "title": "Accessible controls",
+          "body": "Use labels, focus styles, and text alternatives so the component remains understandable without color or hover."
+        }
+      ]
+    },
+    {
+      "slug": "design-a-relationship-picker",
+      "title": "Design a relationship picker",
+      "sort": 10,
+      "track": "payload",
+      "outcome": "Make a Payload relationship field understandable by showing the selected document, search context, and removal action.",
+      "mental_model": [
+        "**Relationships are content navigation.** The field should reveal what is linked, not only store an ID.",
+        "**Search needs context.** Show the collection and enough document metadata to distinguish similar records.",
+        "**Selection is reversible.** Make replacement and removal explicit so editors stay in control."
+      ],
+      "lab": {
+        "kind": "component",
+        "componentKind": "relationship-picker",
+        "surface": "admin",
+        "title": "Build a related-post field",
+        "brief": "Turn the starter select into an admin-friendly relationship picker. Keep the collection context visible, show useful metadata, and let an editor remove the selected document.",
+        "checklist": [
+          "The related collection is named",
+          "Selected document shows title and status",
+          "Search input has a visible label",
+          "Remove action has an accessible name",
+          "The selected relationship can be changed"
+        ],
+        "hints": [
+          "A relationship field is easier to scan when collection context is separate from the document title.",
+          "Use status text in addition to color.",
+          "Treat remove as an action, not as a tiny unlabeled icon."
+        ],
+        "device": "desktop",
+        "starter": {
+          "html": "<section class=\"field\">\n  <label for=\"post-search\">Related post</label>\n  <select id=\"post-search\">\n    <option>Choose a post</option>\n    <option>Introducing the editor</option>\n  </select>\n  <p class=\"hint\">Posts · many-to-one</p>\n</section>",
+          "css": ":root { --accent: #4f46e5; --ink: #0f172a; --muted: #64748b; --border: #dbe3ef; }\n\n* { box-sizing: border-box; }\nbody { min-height: 100vh; display: grid; place-items: center; margin: 0; padding: 24px; background: #f8fafc; color: var(--ink); font-family: Inter, system-ui, sans-serif; }\n.field { width: min(100%, 440px); display: grid; gap: 8px; padding: 24px; border: 1px solid var(--border); border-radius: 12px; background: #ffffff; }\nlabel { font-weight: 650; }\nselect { min-height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; background: #ffffff; font: inherit; }\n.hint { margin: 0; color: var(--muted); font-size: 12px; }",
+          "js": "console.log('Relationship field mounted');"
+        },
+        "solution": {
+          "html": "<section class=\"field\" aria-labelledby=\"field-label\">\n  <div class=\"field-head\">\n    <div>\n      <p class=\"collection\">Posts</p>\n      <h2 id=\"field-label\">Related post</h2>\n    </div>\n    <span class=\"mode\">many-to-one</span>\n  </div>\n  <label for=\"post-search\">Search posts</label>\n  <input id=\"post-search\" type=\"search\" placeholder=\"Search by title\" />\n  <article class=\"selection\" aria-label=\"Selected post\">\n    <div><strong>Introducing the editor</strong><span>Published · /editor</span></div>\n    <button class=\"remove\" type=\"button\" aria-label=\"Remove Introducing the editor\">Remove</button>\n  </article>\n</section>",
+          "css": ":root { --accent: #4f46e5; --ink: #0f172a; --muted: #64748b; --border: #dbe3ef; --soft: #eef2ff; }\n\n* { box-sizing: border-box; }\nbody { min-height: 100vh; display: grid; place-items: center; margin: 0; padding: 24px; background: #f8fafc; color: var(--ink); font-family: Inter, system-ui, sans-serif; }\n.field { width: min(100%, 460px); display: grid; gap: 10px; padding: 24px; border: 1px solid var(--border); border-radius: 14px; background: #ffffff; box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08); }\n.field-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }\n.collection { margin: 0 0 4px; color: var(--accent); font-size: 11px; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }\nh2 { margin: 0; font-size: 18px; }\n.mode { padding: 5px 8px; border-radius: 999px; background: var(--soft); color: var(--accent); font-size: 11px; font-weight: 650; white-space: nowrap; }\nlabel { font-size: 13px; font-weight: 650; }\ninput { min-height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; font: inherit; }\n.selection { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 6px; padding: 12px; border: 1px solid #c7d2fe; border-radius: 9px; background: #f8faff; }\n.selection div { display: grid; gap: 4px; min-width: 0; }\n.selection span { color: var(--muted); font-size: 12px; }\n.remove { min-height: 36px; border: 1px solid var(--border); border-radius: 7px; background: #ffffff; color: var(--ink); font: inherit; font-size: 12px; cursor: pointer; }\n.remove:hover { border-color: var(--accent); color: var(--accent); }\ninput:focus-visible, .remove:focus-visible { outline: 3px solid #a5b4fc; outline-offset: 3px; }\n@media (max-width: 420px) { .selection { align-items: stretch; flex-direction: column; } }",
+          "js": "const remove = document.querySelector('.remove');\nconst selection = document.querySelector('.selection');\nremove?.addEventListener('click', () => {\n  selection.innerHTML = '<span class=\"empty\">No post selected. Search to choose a relationship.</span>';\n});"
+        }
+      },
+      "takeaway": "A Payload relationship field should make the linked document legible and editable, not force editors to remember opaque IDs.",
+      "knowledge_check": {
+        "question": "What information best helps an editor distinguish related documents?",
+        "options": [
+          "Only the database ID",
+          "The collection, title, and useful document metadata",
+          "Only the field label",
+          "A color swatch"
+        ],
+        "answer": 1,
+        "explanation": "Relationship UX should expose enough context to identify the linked document without opening another screen."
+      },
+      "deep_dive": [
+        {
+          "title": "Relationship cardinality",
+          "body": "One-to-one, one-to-many, and many-to-many relationships change the selection model. The label should make that model visible to editors."
+        },
+        {
+          "title": "Admin ergonomics",
+          "body": "Payload field components run inside an editor workflow. Preserve familiar labels, keyboard behavior, and clear save-state feedback."
+        },
+        {
+          "title": "Query context",
+          "body": "A real relationship picker can use the collection's search fields and access rules. The UI should never imply that an inaccessible document can be selected."
+        }
+      ]
+    },
+    {
+      "slug": "build-payload-bar-chart",
+      "title": "Build a Payload pie chart",
+      "sort": 11,
+      "track": "payload",
+      "outcome": "Turn Payload acquisition records into a responsive pie chart that explains each channel's share, with editable values and an intentional admin-to-frontend visual handoff.",
+      "mental_model": [
+        "**Parts need a whole.** A pie chart is useful when each Payload channel contributes to one meaningful total.",
+        "**The row is the contract.** Labels, values, and units stay editable so the chart is never disconnected from CMS content.",
+        "**Responsive is a legend problem.** Keep slice colors, labels, percentages, and exact values understandable as the card narrows."
+      ],
+      "lab": {
+        "kind": "chart",
+        "chartType": "pie",
+        "title": "Explain acquisition share",
+        "brief": "Model a Payload channel summary, edit the values, and tune the pie chart so each slice and its legend remain clear from desktop to phone.",
+        "checklist": [
+          "Channels are named for the reader",
+          "Slice sizes respond to value changes",
+          "The chart remains usable below 420px",
+          "The legend explains each slice and exact value",
+          "The customized chart data is saved in Payload"
+        ],
+        "starter": {
+          "content": {
+            "title": "Leads by source",
+            "caption": "A Payload channel breakdown for the current campaign.",
+            "unit": "leads",
+            "rows": [
+              {
+                "label": "Docs",
+                "value": 64
+              },
+              {
+                "label": "Community",
+                "value": 91
+              },
+              {
+                "label": "Search",
+                "value": 78
+              },
+              {
+                "label": "Referral",
+                "value": 46
+              },
+              {
+                "label": "Email",
+                "value": 113
+              },
+              {
+                "label": "Events",
+                "value": 39
+              }
+            ]
+          },
+          "tokens": {
+            "accent": "#2563eb",
+            "radius": 14,
+            "spacing": 24
+          }
+        },
+        "hints": [
+          "Use channel names that match the Payload collection vocabulary.",
+          "Try a large outlier and make sure the smaller bars remain visible.",
+          "Treat the chart tokens as part of the frontend design system, not database content."
+        ],
+        "device": "responsive"
+      },
+      "takeaway": "Payload pie-chart UX improves when every channel belongs to one total and the legend preserves exact values alongside proportions.",
+      "knowledge_check": {
+        "question": "When is a Payload pie chart a good choice?",
+        "options": [
+          "When the rows are parts of one meaningful whole",
+          "When every category is an unrelated time series",
+          "When exact comparisons are the only goal",
+          "When the data has no labels"
+        ],
+        "answer": 0,
+        "explanation": "A pie chart communicates composition: each labeled row should represent a share of the same total."
+      },
+      "deep_dive": [
+        {
+          "title": "Parts of a whole",
+          "body": "Pie slices communicate composition, not precise ranking. Use them for a small set of categories that share one total."
+        },
+        {
+          "title": "Legend as interface",
+          "body": "The legend carries the exact values and labels that a slice cannot show by itself. Keep it readable and let it wrap on narrow screens."
+        },
+        {
+          "title": "CMS contract",
+          "body": "Payload stores structured rows, while the pie renderer derives proportions at display time. Editing one value changes the whole composition."
+        }
+      ]
+    },
+    {
+      "slug": "build-payload-line-chart",
+      "title": "Build a Payload doughnut chart",
+      "sort": 12,
+      "track": "payload",
+      "outcome": "Design a responsive Payload doughnut chart that shows the balance between release states while keeping the total and segment labels visible.",
+      "mental_model": [
+        "**The center creates context.** A doughnut leaves room for a total or headline metric.",
+        "**Segments need a shared measure.** Each Payload status must use the same unit before it can be compared as part of the whole.",
+        "**Responsive is not smaller desktop.** The ring can resize while the center total and legend preserve the message."
+      ],
+      "lab": {
+        "kind": "chart",
+        "chartType": "doughnut",
+        "title": "Summarize release states",
+        "brief": "Enter Payload release-state values, adjust the visual tokens, and test whether the doughnut, center total, and legend remain clear when the chart narrows.",
+        "checklist": [
+          "Rows represent states in one shared total",
+          "Ring segments change with every edited value",
+          "The center total remains visible on mobile",
+          "The legend names each state and exact value",
+          "The customized composition is saved in Payload"
+        ],
+        "starter": {
+          "content": {
+            "title": "Drafts reviewed per day",
+            "caption": "A release-cycle trend for the Payload editorial team.",
+            "unit": "drafts",
+            "rows": [
+              {
+                "label": "Mon 1",
+                "value": 8
+              },
+              {
+                "label": "Tue 1",
+                "value": 13
+              },
+              {
+                "label": "Wed 1",
+                "value": 11
+              },
+              {
+                "label": "Thu 1",
+                "value": 17
+              },
+              {
+                "label": "Fri 1",
+                "value": 22
+              },
+              {
+                "label": "Mon 2",
+                "value": 19
+              },
+              {
+                "label": "Tue 2",
+                "value": 26
+              }
+            ]
+          },
+          "tokens": {
+            "accent": "#c2410c",
+            "radius": 14,
+            "spacing": 24
+          }
+        },
+        "hints": [
+          "Use labels that preserve order without becoming too wide.",
+          "Edit a middle point to see how a local dip differs from an overall trend.",
+          "Keep the endpoint values visible for learners who cannot inspect the graphic closely."
+        ],
+        "device": "responsive"
+      },
+      "takeaway": "A Payload doughnut chart makes editorial state composition scannable when the center total and segment legend remain available at every width.",
+      "knowledge_check": {
+        "question": "What belongs in the center of a Payload doughnut chart?",
+        "options": [
+          "A useful total or headline for all segments",
+          "A second unrelated data series",
+          "A decorative value with no connection to the rows",
+          "A long paragraph of implementation notes"
+        ],
+        "answer": 0,
+        "explanation": "The center gives the ring context, such as the total number of records represented by its segments."
+      },
+      "deep_dive": [
+        {
+          "title": "A ring with a reason",
+          "body": "The hollow center is useful space, not decoration. Use it for a total, percentage, or short statement that explains the segments."
+        },
+        {
+          "title": "Accessible composition",
+          "body": "Keep the total, labels, and exact values in text so the insight survives without pointer hover, fine-grained SVG inspection, or color perception."
+        },
+        {
+          "title": "Responsive segments",
+          "body": "A responsive doughnut changes its available size, not the underlying proportions. The normalized rows remain the source of truth."
+        }
+      ]
+    },
+    {
+      "slug": "drafts-preview-publish",
+      "title": "Drafts, preview, publish",
+      "sort": 13,
+      "track": "ship",
+      "outcome": "Move a component from draft to published, preview it before the public sees it, and make the state visible.",
+      "mental_model": [
+        "**Draft and published are states, not copies.** A drafts-enabled collection keeps the working version separate from the public version.",
+        "**Preview is a live channel.** Payload streams form state to the preview route; you render the same components with the draft data.",
+        "**Access control is the door.** Public read access must exclude drafts; the UI should never be the only thing hiding them."
+      ],
+      "lab": {
+        "kind": "component",
+        "componentKind": "pricing",
+        "surface": "public",
+        "publishable": true,
+        "title": "Draft, preview, and publish a pricing table",
+        "brief": "Build a three-plan pricing table, save it as a draft, inspect it in the preview, then publish it to the showcase. The billing toggle should stay understandable at every width.",
+        "checklist": [
+          "Three plans share one card structure",
+          "The recommended plan is obvious without relying on color alone",
+          "Prices stay readable at 360px",
+          "The billing toggle is keyboard accessible",
+          "The published version appears in the showcase"
+        ],
+        "hints": [
+          "Keep the plan markup identical; use a modifier class for the featured plan.",
+          "Use grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)).",
+          "Save first; then publish the version you want the public to see.",
+          "Open the showcase after publishing and confirm the card appears."
+        ],
+        "device": "desktop",
+        "starter": {
+          "html": "<section class=\"pricing\">\n  <p class=\"eyebrow\">Simple pricing</p>\n  <h2>Start small. Publish when you are ready.</h2>\n  <div class=\"plan-grid\">\n    <article class=\"plan\">\n      <h3>Starter</h3>\n      <p class=\"price\">$0</p>\n      <p class=\"period\">forever</p>\n      <button type=\"button\">Start building</button>\n    </article>\n    <article class=\"plan\">\n      <h3>Studio</h3>\n      <p class=\"price\">$24</p>\n      <p class=\"period\">per month</p>\n      <button type=\"button\">Choose Studio</button>\n    </article>\n    <article class=\"plan\">\n      <h3>Agency</h3>\n      <p class=\"price\">$79</p>\n      <p class=\"period\">per month</p>\n      <button type=\"button\">Talk to us</button>\n    </article>\n  </div>\n</section>",
+          "css": "* { box-sizing: border-box; }\n\nbody {\n  margin: 0;\n  padding: 32px;\n  background: #f8fafc;\n  color: #0f172a;\n  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;\n}\n\n.pricing { width: min(100%, 980px); margin: 0 auto; }\n.eyebrow { margin: 0 0 8px; color: #7c3aed; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }\n.pricing h2 { margin: 0 0 24px; font-size: clamp(28px, 5vw, 42px); letter-spacing: -0.04em; }\n.plan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }\n.plan { padding: 22px; border: 1px solid #dbe3ef; border-radius: 14px; background: #ffffff; }\n.plan h3 { margin: 0 0 8px; }\n.price { margin: 0; font-size: 36px; font-weight: 750; letter-spacing: -0.04em; }\n.period { margin: 0 0 18px; color: #64748b; font-size: 13px; }\n.plan button { width: 100%; min-height: 42px; border: 1px solid #cbd5e1; border-radius: 8px; background: transparent; font: inherit; font-weight: 650; cursor: pointer; }",
+          "js": ""
+        },
+        "solution": {
+          "html": "<section class=\"pricing\" aria-labelledby=\"pricing-title\">\n  <div class=\"pricing-head\">\n    <div>\n      <p class=\"eyebrow\">Simple pricing</p>\n      <h2 id=\"pricing-title\">Start small. Publish when you are ready.</h2>\n    </div>\n    <fieldset class=\"billing\" aria-label=\"Billing period\">\n      <label><input type=\"radio\" name=\"billing\" value=\"monthly\" checked> Monthly</label>\n      <label><input type=\"radio\" name=\"billing\" value=\"annual\"> Annual · save 20%</label>\n    </fieldset>\n  </div>\n\n  <div class=\"plan-grid\">\n    <article class=\"plan\" data-monthly=\"0\" data-annual=\"0\">\n      <p class=\"plan-kicker\">Starter</p>\n      <h3>For the first component</h3>\n      <p class=\"price\">$0</p>\n      <p class=\"period\">forever</p>\n      <ul>\n        <li>One component</li>\n        <li>Public showcase</li>\n        <li>Community support</li>\n      </ul>\n      <button type=\"button\">Start building</button>\n    </article>\n\n    <article class=\"plan plan--featured\" data-monthly=\"24\" data-annual=\"19\">\n      <p class=\"plan-badge\">Recommended</p>\n      <p class=\"plan-kicker\">Studio</p>\n      <h3>For the working portfolio</h3>\n      <p class=\"price\">$24</p>\n      <p class=\"period\">per month</p>\n      <ul>\n        <li>Unlimited components</li>\n        <li>Draft previews</li>\n        <li>Featured placement</li>\n      </ul>\n      <button type=\"button\">Choose Studio</button>\n    </article>\n\n    <article class=\"plan\" data-monthly=\"79\" data-annual=\"63\">\n      <p class=\"plan-kicker\">Agency</p>\n      <h3>For a team shipping together</h3>\n      <p class=\"price\">$79</p>\n      <p class=\"period\">per month</p>\n      <ul>\n        <li>Team submissions</li>\n        <li>Moderation queue</li>\n        <li>Priority support</li>\n      </ul>\n      <button type=\"button\">Talk to us</button>\n    </article>\n  </div>\n</section>",
+          "css": ":root {\n  --accent: #7c3aed;\n  --accent-strong: #6d28d9;\n  --ink: #0f172a;\n  --muted: #475569;\n  --surface: #ffffff;\n  --border: #dbe3ef;\n  --radius: 16px;\n  --ring: #c4b5fd;\n}\n\n* { box-sizing: border-box; }\n\nbody {\n  margin: 0;\n  padding: 32px;\n  background:\n    radial-gradient(circle at 10% 0%, rgba(124, 58, 237, 0.12), transparent 34%),\n    #f8fafc;\n  color: var(--ink);\n  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;\n}\n\n.pricing {\n  width: min(100%, 1020px);\n  margin: 0 auto;\n}\n\n.pricing-head {\n  display: flex;\n  align-items: flex-end;\n  justify-content: space-between;\n  gap: 24px;\n  margin-bottom: 26px;\n}\n\n.eyebrow {\n  margin: 0 0 8px;\n  color: var(--accent);\n  font-size: 11px;\n  font-weight: 800;\n  letter-spacing: 0.14em;\n  text-transform: uppercase;\n}\n\n.pricing h2 {\n  max-width: 620px;\n  margin: 0;\n  font-size: clamp(30px, 5vw, 46px);\n  letter-spacing: -0.045em;\n  line-height: 1.02;\n}\n\n.billing {\n  display: flex;\n  flex-wrap: wrap;\n  gap: 4px;\n  margin: 0;\n  border: 1px solid var(--border);\n  border-radius: 11px;\n  background: #ffffff;\n  padding: 4px;\n}\n\n.billing label {\n  border-radius: 7px;\n  color: var(--muted);\n  cursor: pointer;\n  font-size: 12px;\n  font-weight: 650;\n  padding: 7px 10px;\n}\n\n.billing label:has(input:checked) {\n  background: var(--accent);\n  color: #ffffff;\n}\n\n.billing input {\n  position: absolute;\n  opacity: 0;\n  pointer-events: none;\n}\n\n.billing label:has(input:focus-visible) {\n  outline: 3px solid var(--ring);\n  outline-offset: 2px;\n}\n\n.plan-grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));\n  gap: 16px;\n}\n\n.plan {\n  position: relative;\n  padding: 24px;\n  border: 1px solid var(--border);\n  border-radius: var(--radius);\n  background: var(--surface);\n}\n\n.plan--featured {\n  border-color: var(--accent);\n  background: linear-gradient(180deg, #faf5ff, #ffffff);\n  box-shadow: 0 18px 38px rgba(124, 58, 237, 0.12);\n}\n\n.plan-badge {\n  position: absolute;\n  top: 18px;\n  right: 18px;\n  margin: 0;\n  border-radius: 999px;\n  background: var(--accent);\n  color: #ffffff;\n  font-size: 10px;\n  font-weight: 750;\n  letter-spacing: 0.06em;\n  padding: 4px 8px;\n  text-transform: uppercase;\n}\n\n.plan-kicker {\n  margin: 0 0 8px;\n  color: var(--accent);\n  font-size: 11px;\n  font-weight: 800;\n  letter-spacing: 0.1em;\n  text-transform: uppercase;\n}\n\n.plan h3 {\n  margin: 0 0 18px;\n  font-size: 16px;\n  font-weight: 650;\n}\n\n.price {\n  margin: 0;\n  font-size: 46px;\n  font-weight: 800;\n  letter-spacing: -0.055em;\n  line-height: 1;\n}\n\n.period {\n  margin: 5px 0 18px;\n  color: var(--muted);\n  font-size: 13px;\n}\n\n.plan ul {\n  display: grid;\n  gap: 9px;\n  margin: 0 0 22px;\n  padding: 0;\n  list-style: none;\n}\n\n.plan li {\n  color: var(--muted);\n  font-size: 13px;\n  line-height: 1.4;\n  padding-left: 18px;\n  position: relative;\n}\n\n.plan li::before {\n  position: absolute;\n  left: 0;\n  color: var(--accent);\n  content: \"✓\";\n  font-weight: 800;\n}\n\n.plan button {\n  width: 100%;\n  min-height: 44px;\n  border: 1px solid var(--border);\n  border-radius: 9px;\n  background: transparent;\n  color: var(--ink);\n  font: inherit;\n  font-weight: 700;\n  cursor: pointer;\n}\n\n.plan--featured button {\n  border-color: var(--accent);\n  background: var(--accent);\n  color: #ffffff;\n}\n\n.plan button:hover { filter: brightness(0.97); }\n.plan--featured button:hover { background: var(--accent-strong); }\n.plan button:focus-visible {\n  outline: 3px solid var(--ring);\n  outline-offset: 3px;\n}\n\n@media (max-width: 720px) {\n  .pricing-head { align-items: flex-start; flex-direction: column; }\n  .billing { width: 100%; }\n  .billing label { flex: 1; text-align: center; }\n}\n\n@media (max-width: 460px) {\n  body { padding: 20px; }\n  .plan { padding: 20px; }\n}",
+          "js": "const plans = document.querySelectorAll(\".plan\");\nconst billing = document.querySelectorAll('input[name=\"billing\"]');\n\nfunction updatePrices() {\n  const selected = document.querySelector('input[name=\"billing\"]:checked');\n  const annual = selected?.value === \"annual\";\n\n  plans.forEach((plan) => {\n    const price = plan.querySelector(\".price\");\n    const monthly = plan.dataset.monthly;\n    const yearly = plan.dataset.annual;\n    if (!price || !monthly || !yearly) return;\n    price.textContent = \"$\" + (annual ? yearly : monthly);\n  });\n}\n\nbilling.forEach((input) => input.addEventListener(\"change\", updatePrices));\nupdatePrices();"
+        }
+      },
+      "takeaway": "Publishing is a workflow, not a button: save the draft, preview the real components, then flip the public state.",
+      "knowledge_check": {
+        "question": "What does `_status` control in a drafts-enabled collection?",
+        "options": [
+          "The database adapter",
+          "Whether a document is a draft or published",
+          "The admin panel's color theme",
+          "The field validation rules"
+        ],
+        "answer": 1,
+        "explanation": "Payload adds `_status` to drafts-enabled documents. Public reads should filter to published documents, while editors and preview routes can read drafts."
+      },
+      "deep_dive": [
+        {
+          "title": "Versions and drafts",
+          "body": "Drafts keep a working copy; versions keep a history. Enable both when editors need to compare or restore, and make the published state explicit in the UI."
+        },
+        {
+          "title": "Live preview",
+          "body": "Payload's live preview sends form state to an iframe with `postMessage`. The preview route uses the same components as the public page, so what editors see is what ships."
+        },
+        {
+          "title": "The access boundary",
+          "body": "Hiding a draft in the UI is not security. Public read access must return a query that excludes drafts; the showcase should query published documents explicitly."
+        }
+      ]
+    },
+    {
+      "slug": "capstone-the-showcase",
+      "title": "Capstone: the showcase",
+      "sort": 14,
+      "track": "ship",
+      "outcome": "Ship a polished testimonial to the public showcase and verify it survives every device and state.",
+      "mental_model": [
+        "**The showcase is a product surface.** It has a hierarchy, a filter model, and a quality bar; it is not a debug page.",
+        "**Polish is systems work.** Responsive layout, contrast, focus, and empty states are part of the component, not a final coat of paint.",
+        "**Publishing is a promise.** Once a component is public, it represents the course; check it before you flip the state."
+      ],
+      "lab": {
+        "kind": "component",
+        "componentKind": "testimonial",
+        "surface": "public",
+        "publishable": true,
+        "title": "Build and publish your capstone testimonial",
+        "brief": "Build the testimonial you want in the showcase. Make the quote, author, company, and rating readable, then publish the final version.",
+        "checklist": [
+          "The quote is the first thing you read",
+          "The author and company are easy to find",
+          "The rating has a text alternative",
+          "It reads well at 360px",
+          "The published version appears in the showcase"
+        ],
+        "hints": [
+          "Use blockquote and figcaption, not div soup.",
+          "Give the stars an aria-label instead of relying on color.",
+          "Test the card at 360px before publishing.",
+          "Open the showcase after publishing and confirm the card appears."
+        ],
+        "device": "desktop",
+        "starter": {
+          "html": "<figure class=\"testimonial\">\n  <blockquote>\n    The lesson made the boundary between the CMS and the frontend click. I shipped my first component the same afternoon.\n  </blockquote>\n  <figcaption>Ada Lovelace · Frontend engineer</figcaption>\n</figure>",
+          "css": "* { box-sizing: border-box; }\n\nbody {\n  display: grid;\n  place-items: center;\n  min-height: 100vh;\n  margin: 0;\n  padding: 32px;\n  background: #f8fafc;\n  color: #0f172a;\n  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;\n}\n\n.testimonial {\n  width: min(100%, 480px);\n  margin: 0;\n  padding: 28px;\n  border: 1px solid #e2e8f0;\n  border-radius: 16px;\n  background: #ffffff;\n}\n\n.testimonial blockquote { margin: 0 0 18px; font-size: 20px; line-height: 1.55; }\n.testimonial figcaption { color: #64748b; font-size: 13px; }",
+          "js": ""
+        },
+        "solution": {
+          "html": "<figure class=\"testimonial\">\n  <div class=\"testimonial-top\">\n    <span class=\"quote-mark\" aria-hidden=\"true\">“</span>\n    <span class=\"rating\" aria-label=\"5 out of 5 stars\">★★★★★</span>\n  </div>\n\n  <blockquote>\n    The lesson made the boundary between the CMS and the frontend click. I shipped my first component the same afternoon.\n  </blockquote>\n\n  <figcaption>\n    <span class=\"avatar\" aria-hidden=\"true\">AL</span>\n    <span class=\"attribution\">\n      <strong>Ada Lovelace</strong>\n      <span>Frontend engineer · Analytical Studio</span>\n    </span>\n  </figcaption>\n</figure>",
+          "css": ":root {\n  --accent: #be123c;\n  --ink: #0f172a;\n  --muted: #475569;\n  --surface: #ffffff;\n  --border: #e2e8f0;\n  --radius: 20px;\n  --ring: #fda4af;\n}\n\n* { box-sizing: border-box; }\n\nbody {\n  display: grid;\n  place-items: center;\n  min-height: 100vh;\n  margin: 0;\n  padding: 32px;\n  background:\n    radial-gradient(circle at 88% 8%, rgba(190, 18, 60, 0.1), transparent 34%),\n    #f8fafc;\n  color: var(--ink);\n  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif;\n}\n\n.testimonial {\n  width: min(100%, 520px);\n  margin: 0;\n  padding: 30px;\n  border: 1px solid var(--border);\n  border-radius: var(--radius);\n  background: var(--surface);\n  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.1);\n}\n\n.testimonial-top {\n  display: flex;\n  align-items: flex-start;\n  justify-content: space-between;\n  gap: 18px;\n  margin-bottom: 14px;\n}\n\n.quote-mark {\n  color: var(--accent);\n  font-family: Georgia, serif;\n  font-size: 58px;\n  line-height: 0.7;\n}\n\n.rating {\n  border: 1px solid rgba(190, 18, 60, 0.2);\n  border-radius: 999px;\n  background: rgba(190, 18, 60, 0.06);\n  color: var(--accent);\n  font-size: 12px;\n  letter-spacing: 0.08em;\n  padding: 5px 9px;\n}\n\n.testimonial blockquote {\n  margin: 0 0 24px;\n  font-size: clamp(20px, 4vw, 28px);\n  font-weight: 550;\n  line-height: 1.45;\n  letter-spacing: -0.025em;\n}\n\n.testimonial figcaption {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  border-top: 1px solid var(--border);\n  padding-top: 18px;\n}\n\n.avatar {\n  display: grid;\n  width: 42px;\n  height: 42px;\n  flex: 0 0 auto;\n  place-items: center;\n  border-radius: 50%;\n  background: #ffe4e6;\n  color: var(--accent);\n  font-size: 13px;\n  font-weight: 800;\n}\n\n.attribution {\n  display: flex;\n  flex-direction: column;\n  gap: 2px;\n  min-width: 0;\n}\n\n.attribution strong {\n  font-size: 14px;\n}\n\n.attribution span {\n  color: var(--muted);\n  font-size: 12px;\n}\n\n@media (max-width: 460px) {\n  body { padding: 20px; }\n  .testimonial { padding: 22px; }\n}",
+          "js": ""
+        }
+      },
+      "takeaway": "A component is finished when it holds up in the showcase, on a phone, with a keyboard, in both themes.",
+      "knowledge_check": {
+        "question": "Which check belongs before publishing a component to the showcase?",
+        "options": [
+          "The component has a unique animation",
+          "The layout survives mobile and contrast passes",
+          "The name is longer than the description",
+          "The component uses every token"
+        ],
+        "answer": 1,
+        "explanation": "Publishing is a quality gate. Responsive behavior and contrast are baseline checks; decoration is optional."
+      },
+      "deep_dive": [
+        {
+          "title": "Responsive by construction",
+          "body": "Use fluid widths, `minmax`, and wrapping instead of fixed pixel layouts. Test the component at 360px, 768px, and full width before publishing."
+        },
+        {
+          "title": "Content quality",
+          "body": "A showcase is only as good as its weakest entry. Complete attributions, specific copy, and one clear idea per component make the gallery useful to the next learner."
+        },
+        {
+          "title": "Moderation",
+          "body": "Learner-published does not mean unmoderated. The admin can feature, unpublish, or delete a submission; the public API only ever exposes published, public components."
+        }
+      ]
+    },
+    {
+      "slug": "build-a-data-table",
+      "title": "Build a numeric data table",
+      "sort": 15,
+      "track": "ship",
+      "outcome": "Create a small table of numbers, style it with the shared build controls, save it to Payload, and read the same rows in the Level 8 chart.",
+      "mental_model": [
+        "**The form is the schema.** Title, caption, unit, and rows are the data contract the chart reads.",
+        "**Reuse the controls.** The same BuilderFields inputs and design tokens drive the form and the live table.",
+        "**Save, then fetch.** The table is stored in the CMS; Level 8 loads the newest saved table and turns it into a bar chart.",
+        "**Keep it small.** A short numeric table is easy to validate, reload, and chart."
+      ],
+      "lab": {
+        "kind": "dataset",
+        "title": "Save a table of numbers",
+        "brief": "Edit the rows and labels, adjust the design tokens, then save the table to Payload. The newest saved table becomes the saved-form chart in the Level 8 showcase.",
+        "checklist": [
+          "Every row has a label and a number",
+          "The table title describes the data",
+          "The unit is visible",
+          "The design tokens still pass contrast",
+          "The table is saved in the CMS"
+        ],
+        "starter": {
+          "content": {
+            "title": "Signups by channel",
+            "caption": "A small numeric table saved in Payload and reused by the Level 8 chart.",
+            "unit": "signups",
+            "rows": [
+              {
+                "label": "Organic",
+                "value": 84
+              },
+              {
+                "label": "Referral",
+                "value": 52
+              },
+              {
+                "label": "Social",
+                "value": 47
+              },
+              {
+                "label": "Email",
+                "value": 66
+              },
+              {
+                "label": "Partners",
+                "value": 29
+              },
+              {
+                "label": "Paid search",
+                "value": 73
+              },
+              {
+                "label": "Events",
+                "value": 21
+              },
+              {
+                "label": "Community",
+                "value": 38
+              },
+              {
+                "label": "Podcast",
+                "value": 17
+              },
+              {
+                "label": "Affiliates",
+                "value": 25
+              }
+            ]
+          },
+          "tokens": {
+            "accent": "#4f46e5",
+            "radius": 14,
+            "spacing": 24
+          }
+        },
+        "hints": [
+          "Use the Number rows list to add, remove, or reorder rows.",
+          "The chart uses the row labels as categories and the values as bars.",
+          "Save again to update the same table, or reset to start a new version."
+        ],
+        "device": "desktop"
+      },
+      "takeaway": "A small, validated table saved in Payload is enough data to drive a real chart without exposing the CMS credentials.",
+      "knowledge_check": {
+        "question": "Where should the Level 8 chart get the numbers from the form?",
+        "options": [
+          "From the newest saved data-table component in Payload",
+          "From a hard-coded array in the chart component",
+          "From the browser's local storage only",
+          "From a CSS variable"
+        ],
+        "answer": 0,
+        "explanation": "The form saves its rows in Payload. The Level 8 server loader reads the newest saved table, validates the rows, and passes a small chart-ready series to the browser."
+      },
+      "deep_dive": [
+        {
+          "title": "Why store rows, not markup?",
+          "body": "The builder saves the labels and numbers as structured content. The preview can change without losing the data, and the chart reads the same values instead of scraping the table."
+        },
+        {
+          "title": "One contract, two views",
+          "body": "The form preview and the Level 8 chart both consume the same title, unit, and row objects. That keeps the data honest when either view changes."
+        },
+        {
+          "title": "Small data is still data",
+          "body": "Validation belongs at the edge: require labels, finite numbers, and a bounded row count so a malformed table cannot break the chart."
+        }
+      ]
+    },
+    {
+      "slug": "design-a-version-history-panel",
+      "title": "Design a version history panel",
+      "sort": 16,
+      "track": "ship",
+      "outcome": "Present Payload versions as a readable timeline with author, state, and a safe restore action.",
+      "mental_model": [
+        "**A version is a decision point.** Show who changed what and when before offering restore.",
+        "**Draft and published are different states.** Editors need to know which version is public.",
+        "**Restore is reversible in practice.** Make the action explicit and explain that it creates a new draft."
+      ],
+      "lab": {
+        "kind": "component",
+        "componentKind": "version-history",
+        "surface": "admin",
+        "title": "Build the version timeline",
+        "brief": "Turn the list of revisions into a useful Payload admin panel. Distinguish published and draft versions, show authorship, and make restore feedback visible.",
+        "checklist": [
+          "Versions are ordered newest first",
+          "Published state is textual",
+          "Each version shows author and time",
+          "Restore action explains its result",
+          "The current version is identifiable"
+        ],
+        "hints": [
+          "Use a timeline or stacked list so chronology is obvious.",
+          "Do not communicate published state with color alone.",
+          "Restoring should say what happens next: it creates a new draft."
+        ],
+        "device": "desktop",
+        "starter": {
+          "html": "<section class=\"history\">\n  <h2>Versions</h2>\n  <div class=\"version\"><strong>Updated headline</strong><span>Today · Draft</span><button type=\"button\">Restore</button></div>\n  <div class=\"version\"><strong>First published version</strong><span>Yesterday · Published</span><button type=\"button\">Restore</button></div>\n</section>",
+          "css": "body { min-height: 100vh; display: grid; place-items: center; margin: 0; padding: 24px; background: #f8fafc; color: #0f172a; font-family: Inter, system-ui, sans-serif; }\n.history { width: min(100%, 520px); padding: 24px; border: 1px solid #dbe3ef; border-radius: 12px; background: #ffffff; }\nh2 { margin: 0 0 18px; font-size: 18px; }\n.version { display: grid; grid-template-columns: 1fr auto; gap: 5px 16px; padding: 16px 0; border-top: 1px solid #e2e8f0; }\n.version span { color: #64748b; font-size: 12px; }\n.version button { grid-column: 2; grid-row: 1 / span 2; align-self: center; min-height: 36px; border: 1px solid #dbe3ef; border-radius: 7px; background: #ffffff; cursor: pointer; }",
+          "js": "console.log('Version history mounted');"
+        },
+        "solution": {
+          "html": "<section class=\"history\" aria-labelledby=\"history-title\">\n  <div class=\"history-head\"><div><p class=\"eyebrow\">Post · Story</p><h2 id=\"history-title\">Version history</h2></div><span class=\"count\">3 versions</span></div>\n  <ol class=\"timeline\">\n    <li class=\"version current\"><div class=\"dot\" aria-hidden=\"true\"></div><div class=\"version-main\"><strong>Updated headline</strong><span>Sam Rivera · 2 minutes ago</span></div><span class=\"status draft\">Current draft</span></li>\n    <li class=\"version\"><div class=\"dot\" aria-hidden=\"true\"></div><div class=\"version-main\"><strong>Reviewed by editorial</strong><span>Sam Rivera · Yesterday</span></div><span class=\"status published\">Published</span><button type=\"button\">Restore</button></li>\n    <li class=\"version\"><div class=\"dot\" aria-hidden=\"true\"></div><div class=\"version-main\"><strong>First version</strong><span>Alex Chen · Monday</span></div><span class=\"status\">Draft</span><button type=\"button\">Restore</button></li>\n  </ol>\n  <p id=\"restore-status\" class=\"restore-status\" role=\"status\"></p>\n</section>",
+          "css": ":root { --accent: #4f46e5; --ink: #0f172a; --muted: #64748b; --border: #dbe3ef; }\nbody { min-height: 100vh; display: grid; place-items: center; margin: 0; padding: 24px; background: #f8fafc; color: var(--ink); font-family: Inter, system-ui, sans-serif; }\n.history { width: min(100%, 560px); padding: 26px; border: 1px solid var(--border); border-radius: 14px; background: #ffffff; box-shadow: 0 18px 40px rgba(15, 23, 42, .08); }\n.history-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }\n.eyebrow { margin: 0 0 5px; color: var(--accent); font-size: 11px; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }\nh2 { margin: 0; font-size: 20px; }\n.count, .status { color: var(--muted); font-size: 12px; }\n.timeline { position: relative; display: grid; gap: 0; margin: 24px 0 0; padding: 0; list-style: none; }\n.version { position: relative; display: grid; grid-template-columns: 14px 1fr auto; align-items: center; gap: 12px; padding: 14px 0; border-top: 1px solid var(--border); }\n.dot { width: 10px; height: 10px; border: 2px solid #cbd5e1; border-radius: 50%; background: #ffffff; }\n.current .dot { border-color: var(--accent); background: var(--accent); }\n.version-main { display: grid; gap: 4px; min-width: 0; }\n.version-main span { color: var(--muted); font-size: 12px; }\n.status { padding: 4px 7px; border-radius: 999px; background: #f1f5f9; }\n.status.published { color: #166534; background: #dcfce7; }\n.status.draft { color: var(--accent); background: #eef2ff; }\n.version button { min-height: 34px; padding: 0 10px; border: 1px solid var(--border); border-radius: 7px; background: #ffffff; color: var(--ink); font: inherit; font-size: 12px; cursor: pointer; }\n.version button:hover, .version button:focus-visible { border-color: var(--accent); color: var(--accent); }\n.restore-status { min-height: 1.4em; margin: 14px 0 0; color: var(--accent); font-size: 12px; }\n@media (max-width: 520px) { .version { grid-template-columns: 14px 1fr auto; } .status { grid-column: 2; justify-self: start; } .version button { grid-column: 3; grid-row: 1 / span 2; } }",
+          "js": "const status = document.getElementById('restore-status');\ndocument.querySelectorAll('.version button').forEach((button) => {\n  button.addEventListener('click', () => {\n    status.textContent = 'A new draft was created from this version.';\n  });\n});"
+        }
+      },
+      "takeaway": "Version history is more than a date list: it gives Payload editors confidence to experiment without losing the published story.",
+      "knowledge_check": {
+        "question": "What should restoring an older Payload version communicate?",
+        "options": [
+          "It silently deletes every newer version",
+          "It creates a new draft from the selected version",
+          "It publishes immediately without review",
+          "It changes only the title"
+        ],
+        "answer": 1,
+        "explanation": "A safe restore preserves history and gives the editor a draft to review before publishing."
+      },
+      "deep_dive": [
+        {
+          "title": "Versions versus revisions",
+          "body": "A revision records a saved state. A versioning UI should make the saved state, author, and publication status easy to inspect."
+        },
+        {
+          "title": "Editorial confidence",
+          "body": "Clear restore feedback lowers the cost of experimentation while keeping publication as a deliberate step."
+        },
+        {
+          "title": "Chronology",
+          "body": "Newest-first ordering matches editorial workflows, while a visible current marker prevents confusion between the active draft and an older snapshot."
+        }
+      ]
+    },
+    {
+      "slug": "build-a-live-preview-toolbar",
+      "title": "Build a live preview toolbar",
+      "sort": 17,
+      "track": "ship",
+      "outcome": "Design a Payload live-preview toolbar that makes draft status, viewport choice, and refresh behavior explicit.",
+      "mental_model": [
+        "**Preview is not publish.** The toolbar must make draft context unmistakable.",
+        "**Viewport is a test tool.** Switching widths helps catch layout regressions before an editor publishes.",
+        "**Refresh should explain itself.** Show when the preview is stale and what action updates it."
+      ],
+      "lab": {
+        "kind": "component",
+        "componentKind": "live-preview-toolbar",
+        "surface": "public",
+        "publishable": true,
+        "title": "Compose the preview controls",
+        "brief": "Build a compact live-preview toolbar for a Payload page. Show that the editor is viewing a draft, provide viewport controls, and make refresh feedback visible.",
+        "checklist": [
+          "Draft context is unmistakable",
+          "Viewport controls have accessible labels",
+          "Active viewport is visually and textually clear",
+          "Refresh action gives feedback",
+          "Toolbar remains usable below 480px"
+        ],
+        "hints": [
+          "Use a badge and text; do not rely on a yellow background to mean draft.",
+          "Icon-only viewport buttons need aria-labels and visible active state.",
+          "A small status message can explain that the preview was refreshed."
+        ],
+        "device": "desktop",
+        "starter": {
+          "html": "<header class=\"toolbar\">\n  <strong>Preview</strong>\n  <button type=\"button\">Desktop</button>\n  <button type=\"button\">Mobile</button>\n  <button type=\"button\">Refresh</button>\n</header>",
+          "css": "body { margin: 0; background: #f8fafc; color: #0f172a; font-family: Inter, system-ui, sans-serif; }\n.toolbar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid #dbe3ef; background: #ffffff; }\n.toolbar strong { margin-right: auto; }\nbutton { min-height: 36px; padding: 0 10px; border: 1px solid #dbe3ef; border-radius: 7px; background: #ffffff; font: inherit; cursor: pointer; }",
+          "js": "console.log('Preview toolbar mounted');"
+        },
+        "solution": {
+          "html": "<header class=\"toolbar\" aria-label=\"Payload live preview controls\">\n  <div class=\"context\"><span class=\"draft-dot\" aria-hidden=\"true\"></span><div><strong>Live preview</strong><span>Draft · not published</span></div></div>\n  <div class=\"viewports\" role=\"group\" aria-label=\"Preview viewport\">\n    <button class=\"viewport active\" type=\"button\" aria-label=\"Preview desktop width\" aria-pressed=\"true\">Desktop</button>\n    <button class=\"viewport\" type=\"button\" aria-label=\"Preview mobile width\" aria-pressed=\"false\">Mobile</button>\n  </div>\n  <button id=\"refresh\" class=\"refresh\" type=\"button\">Refresh preview</button>\n  <span id=\"status\" class=\"status\" role=\"status\" aria-live=\"polite\"></span>\n</header>",
+          "css": ":root { --accent: #4f46e5; --ink: #0f172a; --muted: #64748b; --border: #dbe3ef; }\n* { box-sizing: border-box; }\nbody { margin: 0; background: #f8fafc; color: var(--ink); font-family: Inter, system-ui, sans-serif; }\n.toolbar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: #ffffff; }\n.context { display: flex; align-items: center; gap: 9px; margin-right: auto; }\n.context div { display: grid; gap: 2px; }\n.context span:last-child { color: var(--muted); font-size: 11px; }\n.draft-dot { width: 9px; height: 9px; border-radius: 50%; background: #f59e0b; }\n.viewports { display: flex; gap: 4px; padding: 3px; border: 1px solid var(--border); border-radius: 8px; }\nbutton { min-height: 36px; padding: 0 10px; border: 1px solid transparent; border-radius: 6px; background: #ffffff; color: var(--ink); font: inherit; font-size: 12px; cursor: pointer; }\n.viewport.active { border-color: #c7d2fe; background: #eef2ff; color: var(--accent); font-weight: 650; }\n.refresh { border-color: var(--border); }\nbutton:focus-visible { outline: 3px solid #a5b4fc; outline-offset: 2px; }\n.status { min-width: 90px; color: var(--muted); font-size: 11px; }\n@media (max-width: 480px) { .toolbar { align-items: stretch; flex-wrap: wrap; } .context { width: 100%; } .refresh { margin-left: auto; } .status { min-width: 0; } }",
+          "js": "const status = document.getElementById('status');\nconst refresh = document.getElementById('refresh');\n\ndocument.querySelectorAll('.viewport').forEach((button) => {\n  button.addEventListener('click', () => {\n    document.querySelectorAll('.viewport').forEach((item) => {\n      item.classList.toggle('active', item === button);\n      item.setAttribute('aria-pressed', item === button ? 'true' : 'false');\n    });\n    status.textContent = `${button.textContent} preview selected.`;\n  });\n});\n\nrefresh.addEventListener('click', () => {\n  status.textContent = 'Preview refreshed just now.';\n});"
+        }
+      },
+      "takeaway": "A live preview earns trust when draft status, viewport context, and refresh state are always visible.",
+      "knowledge_check": {
+        "question": "What must a live-preview toolbar distinguish?",
+        "options": [
+          "Draft preview from published content",
+          "The editor's browser brand",
+          "Only the page title",
+          "The database password"
+        ],
+        "answer": 0,
+        "explanation": "Editors need to know whether they are looking at unpublished draft content or the public page."
+      },
+      "deep_dive": [
+        {
+          "title": "Preview URLs",
+          "body": "Payload preview URLs can include draft context and a secret or signed mechanism. The toolbar should reinforce that context instead of hiding it."
+        },
+        {
+          "title": "Viewport testing",
+          "body": "Desktop and mobile toggles are simple, but they make responsive review part of the editorial workflow rather than an afterthought."
+        },
+        {
+          "title": "Stale previews",
+          "body": "When data changes asynchronously, a visible refresh or updated-at message helps editors understand whether they are seeing the latest draft."
+        }
+      ]
+    }
+  ]
+}

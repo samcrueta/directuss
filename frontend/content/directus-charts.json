@@ -1,0 +1,205 @@
+{
+  "section": {
+    "slug": "charts",
+    "title": "Advanced Graphs with Directus",
+    "description": "Level 8 turns live Directus records into an advanced graph dashboard. Query only the fields you need, aggregate and bucket the data server-side, and render responsive, accessible charts without exposing the admin token.",
+    "subtopicCopy": "Level 8 turns live Directus records into advanced, responsive graphs. Query only the fields the charts need, aggregate and bucket the response on the server, and keep the Directus token out of the browser. The same lesson remains available at its standalone URL.",
+    "headerCopy": "Query live Directus records, aggregate and bucket the data on the server, and render an advanced graph showcase without exposing the admin token.",
+    "cardDescription": "Query live records, aggregate and bucket the series on the server, and render a responsive advanced graph showcase without exposing the admin token."
+  },
+  "lesson": {
+    "slug": "advanced-graphs-from-live-data",
+    "title": "Advanced graphs from live Directus data",
+    "outcome": "Choose the right graph, query Directus efficiently, reduce raw rows into chart-ready series, and ship a dashboard that stays honest and readable in empty, offline, and large-data states.",
+    "mental_model": [
+      "**Directus is the query layer.** Request the fields the graph needs, filter before the rows leave the database, and keep the admin token server-side.",
+      "**Aggregate before you render.** Group, count, bucket, and sort on the server so the browser receives a small, predictable series instead of every record.",
+      "**The graph type is a decision.** Comparison wants bars, change over time wants lines or areas, distribution wants a histogram, and composition wants a small part-to-whole chart.",
+      "**A chart is a claim.** Label the axes, units, source, and time window. Add a text summary so the insight survives without colour or hover.",
+      "**Performance is part of the design.** Avoid unbounded collection scans, cache stable aggregates, and say when the data is sampled, stale, or unavailable."
+    ],
+    "steps": [
+      {
+        "title": "Frame the question",
+        "body": "Give every graph one job. “How are lessons split across tracks?” is a comparison. “When did notes arrive?” is a trend. “Show every note body” belongs in a table, not a chart."
+      },
+      {
+        "title": "Choose the visual grammar",
+        "body": "Match the question to a chart family before writing code. Bars compare categories, lines show change, histograms reveal distribution, and donuts show composition only when the slices are few."
+      },
+      {
+        "title": "Query only the required fields",
+        "body": "Use the server-side token, request the two or three fields the graph needs, apply filters and a time window, and cap or paginate collections that can grow without limit."
+      },
+      {
+        "title": "Aggregate at the source",
+        "body": "Use Directus aggregate and groupBy for counts and sums. For example, group lab_notes by status and count rows instead of downloading every note to count them in JavaScript."
+      },
+      {
+        "title": "Bucket time series",
+        "body": "Turn timestamps into day, week, or month buckets and fill missing buckets with zero. Normalise time zones so a daily chart does not shift its peaks depending on where the reader lives."
+      },
+      {
+        "title": "Shape multi-series data",
+        "body": "Return a stable payload such as { labels, series } from the server loader. Convert numeric strings from aggregate responses, sort categories deliberately, and handle empty series before rendering."
+      },
+      {
+        "title": "Render responsively and accessibly",
+        "body": "Keep Recharts in a client component, wrap charts in ResponsiveContainer, provide titles and summaries, avoid relying on colour alone, and expose the same numbers in text or a table."
+      },
+      {
+        "title": "Handle the edges",
+        "body": "Distinguish “no data yet” from “Directus did not answer.” Label sample data when the API is offline, explain truncation or sampling, and show a readable fallback when the query returns an unexpected shape."
+      },
+      {
+        "title": "Read the saved form table",
+        "body": "Load the newest data-table component saved in Directus, validate that every row has a label and a finite number, and pass those rows straight into the chart. The form becomes the data source, not a screenshot."
+      }
+    ],
+    "graph_types": [
+      {
+        "name": "Bar or column",
+        "use_when": "Compare counts or totals across a small set of categories, such as lessons per track or notes per status.",
+        "watch_for": "Keep a zero baseline, sort by meaning rather than alphabetically, and avoid stacking too many series."
+      },
+      {
+        "name": "Line or area",
+        "use_when": "Show change over time, such as notes created per day or published lessons per month.",
+        "watch_for": "Use a consistent interval, mark missing buckets, and make cumulative totals explicit in the title."
+      },
+      {
+        "name": "Stacked bar",
+        "use_when": "Show part-to-whole across categories over time, such as draft and processed notes per week.",
+        "watch_for": "Limit the number of segments and make sure the parts actually sum to the whole."
+      },
+      {
+        "name": "Donut or pie",
+        "use_when": "Show composition with two to five slices where the proportions are the main message.",
+        "watch_for": "Avoid tiny slices and never use a pie for trends or ranking across many categories."
+      },
+      {
+        "name": "Histogram",
+        "use_when": "Reveal the distribution of a numeric field, such as note word-count buckets.",
+        "watch_for": "State the bucket size and avoid changing bucket boundaries between refreshes."
+      },
+      {
+        "name": "Scatter plot",
+        "use_when": "Explore correlation between two measures, such as word count against time spent editing.",
+        "watch_for": "Handle overplotting and remember that correlation is not causation."
+      },
+      {
+        "name": "KPI or metric card",
+        "use_when": "Lead with one headline number and give it context, such as notes this fortnight.",
+        "watch_for": "Include the comparison or trend; a number without a baseline is not an insight."
+      }
+    ],
+    "code": "import {\n  aggregate,\n  createDirectus,\n  readItems,\n  rest,\n  staticToken\n} from \"@directus/sdk\";\n\nconst directus = createDirectus(process.env.DIRECTUS_URL)\n  .with(rest())\n  .with(staticToken(process.env.DIRECTUS_TOKEN));\n\nconst since = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();\n\nconst [statusRows, recentNotes] = await Promise.all([\n  // Let Directus group and count instead of downloading every note.\n  directus.request(\n    aggregate(\"lab_notes\", {\n      aggregate: { count: \"*\" },\n      groupBy: [\"status\"]\n    })\n  ),\n  // Only the timestamp is needed for the activity series.\n  directus.request(\n    readItems(\"lab_notes\", {\n      fields: [\"date_created\"],\n      filter: { date_created: { _gte: since } },\n      limit: -1\n    })\n  )\n]);\n\nconst statusSeries = statusRows\n  .map((row) => ({ name: row.status, value: Number(row.count) }))\n  .sort((a, b) => b.value - a.value);\n\nconst activity = new Map();\nfor (const note of recentNotes) {\n  const day = note.date_created.slice(0, 10);\n  activity.set(day, (activity.get(day) ?? 0) + 1);\n}\n\nexport const chartPayload = {\n  labels: [...activity.keys()].sort(),\n  series: [\n    {\n      key: \"activity\",\n      label: \"Notes created\",\n      values: [...activity.entries()]\n        .sort(([a], [b]) => a.localeCompare(b))\n        .map(([, count]) => count)\n    }\n  ],\n  statusSeries\n};\n",
+    "takeaway": "An advanced graph is a deliberate question, a bounded query, a server-side reduction, and a labelled claim. The chart library is the last and smallest part of the work.",
+    "knowledge_check": {
+      "question": "Where should lab_notes be grouped into status counts before the chart renders?",
+      "options": [
+        "In the server loader using Directus aggregate and groupBy",
+        "In the browser after downloading every note",
+        "In a CSS media query",
+        "Only inside Directus Insights"
+      ],
+      "answer": 0,
+      "explanation": "Group on the server so the browser receives a small aggregate. Downloading every note exposes more data than the chart needs and gets slower as the collection grows."
+    },
+    "deep_dive": [
+      {
+        "title": "When a table beats a graph",
+        "body": "Charts are for comparison, trend, distribution, and composition. If the reader needs exact values for many records, a sortable table is more honest and more useful than a crowded chart."
+      },
+      {
+        "title": "Aggregation at the source",
+        "body": "Directus aggregate and groupBy handle common counts and sums. For heavier dashboards, move aggregation into a scheduled Flow, a custom endpoint, or a materialised summary collection so the page does not scan the full table on every request."
+      },
+      {
+        "title": "Time zones and missing buckets",
+        "body": "Group timestamps consistently, fill missing days or weeks with zero, and label the window. Without those steps, a quiet day looks like missing data and a local-time dashboard can disagree with the database."
+      },
+      {
+        "title": "Accessible charts",
+        "body": "Give every chart a heading, a short text summary, and a data table or list fallback. Do not encode meaning with colour alone, and make tooltips reachable by keyboard where the library allows it."
+      },
+      {
+        "title": "Large collections",
+        "body": "Set a time window, use filters, paginate where necessary, and cache stable aggregates. If a graph needs millions of rows, it usually needs a precomputed summary rather than a bigger client-side reduce."
+      },
+      {
+        "title": "Empty, offline, and unexpected states",
+        "body": "“No notes yet”, “Directus is offline”, and “the query returned an unexpected shape” are different messages. Show the correct one, and label any sample data instead of silently rendering it as live."
+      },
+      {
+        "title": "Directus Insights vs product charts",
+        "body": "Directus Insights is the built-in no-code dashboard for internal analytics. Build a custom graph when the visualisation is part of the learner-facing product and needs the app's layout, labels, and empty states."
+      }
+    ],
+    "preview": "Live Directus aggregates plus two responsive views of the newest editable table saved by the Level 7 data lab. Open the showcase for activity and distribution panels.",
+    "code_label": "Directus SDK"
+  },
+  "showcase": {
+    "sourceLive": "Live from Directus",
+    "sourceSample": "Sample data · Directus offline",
+    "metrics": {
+      "lessons": {
+        "label": "Lessons"
+      },
+      "records": {
+        "label": "Lab notes",
+        "hint": "Across the Directus labs"
+      },
+      "drafts": {
+        "label": "Draft notes",
+        "hint": "Awaiting review"
+      },
+      "published": {
+        "label": "Published lessons"
+      }
+    },
+    "charts": {
+      "tracks": {
+        "title": "Lessons by track",
+        "description": "How the advanced Directus workspace splits between automation and UI.",
+        "empty": "No lessons found. Run the Directus seed to publish the advanced workspace."
+      },
+      "status": {
+        "title": "Lab pipeline",
+        "description": "Every note created by the Directus automation labs.",
+        "empty": "No lab notes yet. Run a Directus lab to populate this chart."
+      },
+      "activity": {
+        "title": "Lab activity",
+        "description": "Notes created per day over the last 14 days.",
+        "empty": "No notes in the last 14 days. Run a lab to wake this chart up."
+      },
+      "distribution": {
+        "title": "Note depth",
+        "description": "Word-count distribution for notes that have a body.",
+        "empty": "No word counts yet. Create a note with a body to populate this chart."
+      },
+      "table": {
+        "title": "Saved form data",
+        "description": "The newest numeric table saved from the Level 7 Directus data-table lab.",
+        "empty": "Save a table in the Level 7 data lab to populate this chart."
+      },
+      "tableTrend": {
+        "title": "Editable data as a trend",
+        "description": "The same rows from the Directus data table rendered as a responsive area chart.",
+        "empty": "Save a table in the Level 7 data lab to populate this chart."
+      }
+    },
+    "recordPlural": "notes",
+    "recordSingular": "note",
+    "distributionSummary": "{total} notes carry a word count.",
+    "heroTitle": "The Directus Charts showcase",
+    "heroDescription": "Live views of the same Directus instance: lesson and record aggregates plus two responsive charts from the editable numeric table. The page reads aggregates only — never note titles or bodies. Edit the table in Level 7, save it, and refresh to update both charts.",
+    "notes": [
+      "The loader requests track and published from the lessons collection, plus status, word_count, and date_created from the lab notes collection. It reduces those rows into the small series shown above.",
+      "Directus Insights is the built-in no-code dashboard for internal analytics. This showcase is the product-surface alternative: the same data, shaped for learners and rendered with Recharts.",
+      "If Directus is offline, the page stays usable with a labelled sample dataset. The badge at the top tells you which source you are seeing.",
+      "The saved-form chart reads the newest data-table component created by the Level 7 Directus lab. Save a new table there, then refresh this page to see the bars change."
+    ]
+  }
+}

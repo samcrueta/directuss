@@ -1,0 +1,205 @@
+{
+  "section": {
+    "slug": "charts",
+    "title": "Advanced Graphs with Payload CMS",
+    "description": "Level 8 turns live Payload component records into an advanced graph dashboard. Query only the fields you need, reduce the rows into chart-ready series on the server, and render responsive, accessible charts without exposing the API key.",
+    "subtopicCopy": "Level 8 turns live Payload component records into advanced, responsive graphs. Query only the fields the charts need, reduce the response on the server, and keep the Payload API key out of the browser. The same lesson remains available at its standalone URL.",
+    "headerCopy": "Query live Payload components, reduce them into chart-ready series on the server, and render an advanced graph showcase without exposing the API key.",
+    "cardDescription": "Query live Payload component records, shape the series on the server, and render a responsive graph showcase without exposing the API key."
+  },
+  "lesson": {
+    "slug": "advanced-graphs-from-live-payload-components",
+    "title": "Advanced graphs from live Payload components",
+    "outcome": "Choose the right graph, query Payload efficiently, reduce component records into chart-ready series, and ship a dashboard that stays honest and readable in empty, offline, and large-data states.",
+    "mental_model": [
+      "**Payload components are data too.** Every saved component is a record with a kind, status, surface, lesson, and timestamp — exactly the fields a chart needs.",
+      "**Query narrowly and reduce on the server.** Request only the component fields the graph uses, keep the API key server-side, and send the browser a small shaped series rather than raw records.",
+      "**The graph type is a decision.** Comparison wants bars, change over time wants lines or areas, distribution wants a histogram, and composition wants a small part-to-whole chart.",
+      "**A chart is a claim.** Label the axes, units, source, and time window. Add a text summary so the insight survives without colour or hover.",
+      "**Payload has no aggregate endpoint.** Group and count in the server loader, or move heavy aggregation into a hook, custom endpoint, or cached summary collection."
+    ],
+    "steps": [
+      {
+        "title": "Frame the question",
+        "body": "Give every graph one job. “How are components split by status?” is a comparison. “When were components created?” is a trend. “Show every component’s code” belongs in a table, not a chart."
+      },
+      {
+        "title": "Choose the visual grammar",
+        "body": "Match the question to a chart family before writing code. Bars compare categories, lines show change, histograms reveal distribution, and donuts show composition only when the slices are few."
+      },
+      {
+        "title": "Query only the required fields",
+        "body": "Use the server-side service key, request the component fields the graph needs, apply filters and a time window, and cap collections that can grow without limit."
+      },
+      {
+        "title": "Reduce the records at the source",
+        "body": "Payload returns documents through the REST and Local APIs rather than Directus-style aggregate and groupBy queries. Count statuses and kinds in the server loader, then discard names, descriptions, and code."
+      },
+      {
+        "title": "Bucket time series",
+        "body": "Turn createdAt timestamps into day, week, or month buckets and fill missing buckets with zero. Normalise time zones so a daily chart does not shift its peaks depending on where the reader lives."
+      },
+      {
+        "title": "Shape multi-series data",
+        "body": "Return a stable payload such as { labels, series } from the server loader. Convert numeric strings, sort categories deliberately, and handle empty series before rendering."
+      },
+      {
+        "title": "Render responsively and accessibly",
+        "body": "Keep Recharts in a client component, wrap charts in ResponsiveContainer, provide titles and summaries, avoid relying on colour alone, and expose the same numbers in text or a table."
+      },
+      {
+        "title": "Handle the edges",
+        "body": "Distinguish “no components yet” from “Payload did not answer.” Label sample data when the API is offline, explain truncation or sampling, and show a readable fallback when the query returns an unexpected shape."
+      },
+      {
+        "title": "Read the saved form table",
+        "body": "Load the newest data-table component saved in Payload, validate that every row has a label and a finite number, and pass those rows straight into the chart. The form becomes the data source, not a screenshot."
+      }
+    ],
+    "graph_types": [
+      {
+        "name": "Bar or column",
+        "use_when": "Compare counts or totals across a small set of categories, such as components per kind or lessons per track.",
+        "watch_for": "Keep a zero baseline, sort by meaning rather than alphabetically, and avoid stacking too many series."
+      },
+      {
+        "name": "Line or area",
+        "use_when": "Show change over time, such as components created per day or published lessons per month.",
+        "watch_for": "Use a consistent interval, mark missing buckets, and make cumulative totals explicit in the title."
+      },
+      {
+        "name": "Stacked bar",
+        "use_when": "Show part-to-whole across categories over time, such as draft and published components per week.",
+        "watch_for": "Limit the number of segments and make sure the parts actually sum to the whole."
+      },
+      {
+        "name": "Donut or pie",
+        "use_when": "Show composition with two to five slices where the proportions are the main message.",
+        "watch_for": "Avoid tiny slices and never use a pie for trends or ranking across many categories."
+      },
+      {
+        "name": "Histogram",
+        "use_when": "Reveal the distribution of a numeric field, such as component code-size buckets.",
+        "watch_for": "State the bucket size and avoid changing bucket boundaries between refreshes."
+      },
+      {
+        "name": "Scatter plot",
+        "use_when": "Explore correlation between two measures, such as component code size against time spent editing.",
+        "watch_for": "Handle overplotting and remember that correlation is not causation."
+      },
+      {
+        "name": "KPI or metric card",
+        "use_when": "Lead with one headline number and give it context, such as components created this fortnight.",
+        "watch_for": "Include the comparison or trend; a number without a baseline is not an insight."
+      }
+    ],
+    "code": "const PAYLOAD_URL = process.env.PAYLOAD_URL;\nconst PAYLOAD_API_KEY = process.env.PAYLOAD_API_KEY;\n\nconst headers = {\n  Authorization: `users API-Key ${PAYLOAD_API_KEY}`,\n  Accept: \"application/json\"\n};\n\nconst [lessonsResult, componentsResult] = await Promise.all([\n  fetch(`${PAYLOAD_URL}/api/lessons?limit=0&depth=0`, { headers })\n    .then((response) => response.json()),\n  fetch(`${PAYLOAD_URL}/api/components?limit=0&depth=0`, { headers })\n    .then((response) => response.json())\n]);\n\nconst lessons = lessonsResult.docs;\nconst components = componentsResult.docs;\n\nconst byTrack = new Map();\nfor (const lesson of lessons) {\n  byTrack.set(lesson.track, (byTrack.get(lesson.track) ?? 0) + 1);\n}\n\nconst byStatus = new Map();\nfor (const component of components) {\n  byStatus.set(component.status, (byStatus.get(component.status) ?? 0) + 1);\n}\n\nconst dayKey = (value) => new Date(value).toISOString().slice(0, 10);\nconst activity = new Map();\nfor (const component of components) {\n  const day = dayKey(component.createdAt);\n  activity.set(day, (activity.get(day) ?? 0) + 1);\n}\n\n// The browser receives counts only: no names, descriptions, or code.\nexport const chartData = {\n  lessons: [...byTrack].map(([name, value]) => ({ name, value })),\n  statuses: [...byStatus].map(([name, value]) => ({ name, value })),\n  activity: [...activity]\n    .sort(([left], [right]) => left.localeCompare(right))\n    .map(([day, value]) => ({ day, value }))\n};\n",
+    "preview": "Live Payload aggregates plus two responsive views of the newest editable table saved by the Level 7 data lab. Open the showcase for activity and distribution panels.",
+    "code_label": "Payload REST API",
+    "takeaway": "An advanced graph is a deliberate question, a bounded Payload query, a server-side reduction, and a labelled claim. The chart library is the last and smallest part of the work.",
+    "knowledge_check": {
+      "question": "Where should Payload component records be counted by status before the chart renders?",
+      "options": [
+        "In the server loader, which reads the records with the service key and returns only counts",
+        "In the browser after downloading every component and its code",
+        "In a CSS media query",
+        "Only inside the Payload admin panel"
+      ],
+      "answer": 0,
+      "explanation": "Payload's REST and Local APIs return documents, not grouped aggregates. Count the records on the server so the browser receives a small series and never receives draft names or component code."
+    },
+    "deep_dive": [
+      {
+        "title": "When a table beats a graph",
+        "body": "Charts are for comparison, trend, distribution, and composition. If the reader needs exact values for many records, a sortable table is more honest and more useful than a crowded chart."
+      },
+      {
+        "title": "Aggregation without aggregate()",
+        "body": "Payload has no Directus-style aggregate and groupBy endpoint. Reduce component records in the server loader for small datasets, or move heavier work into a collection hook, a custom endpoint, or a scheduled summary collection when the collection grows."
+      },
+      {
+        "title": "Time zones and missing buckets",
+        "body": "Group createdAt timestamps consistently, fill missing days or weeks with zero, and label the window. Without those steps, a quiet day looks like missing data and a local-time dashboard can disagree with the database."
+      },
+      {
+        "title": "Accessible charts",
+        "body": "Give every chart a heading, a short text summary, and a data table or list fallback. Do not encode meaning with colour alone, and make tooltips reachable by keyboard where the library allows it."
+      },
+      {
+        "title": "Large collections",
+        "body": "Set a time window, use Payload where queries, paginate where necessary, and cache stable summaries. If a graph needs millions of documents, it usually needs a precomputed collection rather than a bigger client-side reduce."
+      },
+      {
+        "title": "Draft content stays server-side",
+        "body": "The service key can read draft components. Use it only in the server loader, aggregate the rows there, and never forward names, descriptions, code, or owner sessions to the browser."
+      },
+      {
+        "title": "Empty, offline, and unexpected states",
+        "body": "“No components yet”, “Payload is offline”, and “the query returned an unexpected shape” are different messages. Show the correct one, and label any sample data instead of silently rendering it as live."
+      }
+    ]
+  },
+  "showcase": {
+    "sourceLive": "Live from Payload",
+    "sourceSample": "Sample data · Payload offline",
+    "metrics": {
+      "lessons": {
+        "label": "Lessons"
+      },
+      "records": {
+        "label": "Components",
+        "hint": "Across the Payload component lab"
+      },
+      "drafts": {
+        "label": "Draft components",
+        "hint": "Awaiting review"
+      },
+      "published": {
+        "label": "Published lessons"
+      }
+    },
+    "charts": {
+      "tracks": {
+        "title": "Lessons by track",
+        "description": "How the advanced Payload course splits across foundations, components, and showcase.",
+        "empty": "No lessons found. Seed the Payload course to publish the advanced lessons."
+      },
+      "status": {
+        "title": "Components by status",
+        "description": "Every component saved by the Payload component lab.",
+        "empty": "No components yet. Run a Payload lab to populate this chart."
+      },
+      "activity": {
+        "title": "Component activity",
+        "description": "Components created per day over the last 14 days.",
+        "empty": "No components in the last 14 days. Save a component to wake this chart up."
+      },
+      "distribution": {
+        "title": "Components by kind",
+        "description": "The component kinds learners build most often.",
+        "empty": "No component kinds yet. Save a component to populate this chart."
+      },
+      "table": {
+        "title": "Saved form data",
+        "description": "The newest numeric table saved from the Level 7 Payload data-table lab.",
+        "empty": "Save a table in the Level 7 data lab to populate this chart."
+      },
+      "tableTrend": {
+        "title": "Editable data as a trend",
+        "description": "The same rows from the Payload data table rendered as a responsive area chart.",
+        "empty": "Save a table in the Level 7 data lab to populate this chart."
+      }
+    },
+    "recordPlural": "components",
+    "recordSingular": "component",
+    "distributionSummary": "{total} components across {buckets} kinds.",
+    "heroTitle": "The Payload Charts showcase",
+    "heroDescription": "Live views of the same Payload instance: lesson and component aggregates plus two responsive charts from the editable numeric table. The page reads aggregate counts only — never draft names or component code. Edit the table in Level 7, save it, and refresh to update both charts.",
+    "notes": [
+      "The loader requests track and published from the lessons collection, plus status, kind, and createdAt from the components collection. It reduces those rows into the small series shown above.",
+      "Payload has no Directus-style aggregate endpoint. The counts are produced in the server loader, and heavier dashboards can move that work into a hook, custom endpoint, or scheduled summary collection.",
+      "If Payload is offline, the page stays usable with a labelled sample dataset. The badge at the top tells you which source you are seeing.",
+      "The saved-form chart reads the newest data-table component created by the Level 7 Payload lab. Save a new table there, then refresh this page to see the bars change."
+    ]
+  }
+}

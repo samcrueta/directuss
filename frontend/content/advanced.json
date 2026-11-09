@@ -1,0 +1,1177 @@
+{
+  "section": {
+    "slug": "advanced",
+    "title": "Advanced Directus",
+    "description": "Seventeen focused lessons: five API and automation labs, plus twelve UI/UX component and chart labs. Each lesson ends with a hands-on lab that runs against a real Directus instance."
+  },
+  "lessons": [
+    {
+      "slug": "flows",
+      "title": "Flows: the mental model",
+      "sort": 1,
+      "outcome": "Read any Directus Flow as a trigger, a chain of operations, and one data object moving through them.",
+      "mental_model": [
+        "**Trigger** decides when the Flow runs. Event hooks watch data, webhooks watch HTTP, schedules watch the clock.",
+        "**Operations** decide what happens. Each one reads the data chain and writes its result under its key.",
+        "**$trigger, $last, and $env** are your handles. A Filter (blocking) trigger can rewrite a payload before it is saved."
+      ],
+      "lab": {
+        "title": "Enrich a note with a blocking Flow",
+        "instructions": "Create a note. A Filter Flow runs before the insert and adds slug, word_count, and source. Change the title and run it again to see the derived fields update.",
+        "starter": "const note = await directus.post('/items/lab_notes', {\n  title: 'Hello Flows',\n  body: 'Directus flows can enrich a record before it is saved.',\n  status: 'draft'\n});\n\nconsole.log('Created note:', note.data);\nreturn note.data;",
+        "solution": "const note = await directus.post('/items/lab_notes', {\n  title: 'Hello Flows',\n  body: 'Directus flows can enrich a record before it is saved.',\n  status: 'draft'\n});\n\nconsole.log('Created note:', note.data);\nreturn note.data;",
+        "expected": "{\n  \"id\": \"…\",\n  \"title\": \"Hello Flows\",\n  \"body\": \"Directus flows can enrich a record before it is saved.\",\n  \"slug\": \"hello-flows\",\n  \"word_count\": 10,\n  \"source\": \"flow\",\n  \"status\": \"draft\"\n}",
+        "hints": [
+          "The Flow is attached to the lab_notes collection.",
+          "A Filter trigger runs before the database insert.",
+          "If you change the title, the slug changes with it."
+        ],
+        "timeoutMs": 6000,
+        "keepAliveMs": 0,
+        "kind": "api"
+      },
+      "takeaway": "A blocking Flow is middleware for your data: it can validate, transform, or cancel the write.",
+      "knowledge_check": {
+        "question": "Which trigger type can change a payload before it is written?",
+        "options": [
+          "Event Hook — Filter (blocking)",
+          "Event Hook — Action (non-blocking)",
+          "Webhook",
+          "Schedule"
+        ],
+        "answer": 0,
+        "explanation": "A Filter (blocking) event hook pauses the transaction, lets the Flow transform the payload, and then resumes the write."
+      },
+      "deep_dive": [
+        {
+          "title": "The five trigger types",
+          "body": "Event hook, webhook, schedule (CRON), another Flow, and manual. Most automations start with an event hook or a webhook."
+        },
+        {
+          "title": "Blocking vs non-blocking",
+          "body": "Filter hooks block the transaction and can cancel it. Action hooks run after the commit and are better for notifications and slow side effects."
+        },
+        {
+          "title": "The data chain",
+          "body": "Every Flow starts with $trigger, $accountability, $env, and $last. Each operation appends its output under its own key."
+        }
+      ],
+      "track": "api"
+    },
+    {
+      "slug": "webhooks",
+      "title": "Webhooks and third-party calls",
+      "sort": 2,
+      "outcome": "Expose a Flow as an HTTP endpoint, call an external service, and return the result to the caller.",
+      "mental_model": [
+        "A **webhook trigger** is just a URL: POST /flows/trigger/:id.",
+        "Turn **Asynchronous** off and set **Response Body** to return the Flow result synchronously.",
+        "The **Request URL** operation handles method, headers, and body. Keep secrets in env vars and design for retries."
+      ],
+      "lab": {
+        "title": "Call a weather service through a Flow",
+        "instructions": "Send a city to the webhook Flow. The Flow calls the local mock weather API and returns a normalized forecast. Try Manila, Tokyo, or Oslo.",
+        "starter": "const forecast = await directus.post('/flows/trigger/lab-weather', {\n  city: 'Manila',\n  units: 'metric'\n});\n\nconsole.log('Forecast:', forecast);\nreturn forecast;",
+        "solution": "const forecast = await directus.post('/flows/trigger/lab-weather', {\n  city: 'Manila',\n  units: 'metric'\n});\n\nconsole.log('Forecast:', forecast);\nreturn forecast;",
+        "expected": "{\n  \"city\": \"Manila\",\n  \"units\": \"metric\",\n  \"tempC\": 31,\n  \"condition\": \"Humid\",\n  \"source\": \"mock-weather\"\n}",
+        "hints": [
+          "The webhook receives the JSON body as $trigger.",
+          "The Flow calls the mock API with the city and units.",
+          "Response Body is set to the last operation, so the HTTP response is the forecast."
+        ],
+        "timeoutMs": 7000,
+        "keepAliveMs": 0,
+        "kind": "api"
+      },
+      "takeaway": "A synchronous webhook Flow is a small integration endpoint you can build without deploying a new service.",
+      "knowledge_check": {
+        "question": "Why should a webhook receiver be idempotent?",
+        "options": [
+          "So retries do not create duplicate side effects",
+          "So the Flow runs faster",
+          "So Directus can cache the response",
+          "So the payload can be larger"
+        ],
+        "answer": 0,
+        "explanation": "Networks retry. An idempotent receiver detects a repeated event and avoids charging, shipping, or creating the same thing twice."
+      },
+      "deep_dive": [
+        {
+          "title": "Webhook vs event hook",
+          "body": "Event hooks start inside Directus when data changes. Webhooks start outside Directus when an HTTP request arrives. Both can run the same operations."
+        },
+        {
+          "title": "Secrets and headers",
+          "body": "The lab Flow sends an x-lab-secret header from an environment variable. Never hard-code API keys in a Flow or in browser code."
+        },
+        {
+          "title": "Retries and idempotency",
+          "body": "Use a stable event ID, store processed IDs, and make the receiver safe to call more than once. Log failures so a retry can be replayed."
+        }
+      ],
+      "track": "api"
+    },
+    {
+      "slug": "extensions",
+      "title": "Extending Directus",
+      "sort": 3,
+      "outcome": "Choose the right extension type, call a custom endpoint, and recognize when configuration is enough.",
+      "mental_model": [
+        "**App extensions** change the Studio: interface, display, layout, module, panel, theme.",
+        "**API extensions** change the server: endpoint, hook, operation.",
+        "Build only when configuration cannot do it. Every extension is code you own and must maintain."
+      ],
+      "lab": {
+        "title": "Call a custom endpoint",
+        "instructions": "This project ships a tiny endpoint extension at /labs-endpoint. Call it and inspect the response. Then edit the interface config below to see how a custom field control is shaped.",
+        "starter": "const hello = await directus.get('/labs-endpoint/hello');\n\nconsole.log('Endpoint response:', hello);\nreturn hello;",
+        "solution": "const hello = await directus.get('/labs-endpoint/hello');\n\nconsole.log('Endpoint response:', hello);\nreturn hello;",
+        "expected": "{\n  \"ok\": true,\n  \"message\": \"Hello from a Directus endpoint extension\",\n  \"extension\": \"labs-endpoint\",\n  \"directus\": \"12.x\"\n}",
+        "hints": [
+          "The extension is mounted under its package name.",
+          "Custom endpoints are normal Express routes.",
+          "The response includes the extension name."
+        ],
+        "timeoutMs": 5000,
+        "keepAliveMs": 0,
+        "interfacePreview": {
+          "title": "Rating interface",
+          "description": "A custom interface receives a value and options, then emits a new value. Edit the config and try the control.",
+          "config": {
+            "label": "Rating",
+            "min": 1,
+            "max": 5,
+            "value": 3
+          }
+        },
+        "kind": "api"
+      },
+      "takeaway": "Extensions are how Directus stays small: add the behavior you need without forking the core.",
+      "knowledge_check": {
+        "question": "Which extension type adds a new top-level page to the Studio?",
+        "options": [
+          "Interface",
+          "Display",
+          "Module",
+          "Endpoint"
+        ],
+        "answer": 2,
+        "explanation": "A module adds a top-level entry to the Studio navigation. Interfaces and displays affect fields; endpoints add API routes."
+      },
+      "deep_dive": [
+        {
+          "title": "Extension types",
+          "body": "App: interface, display, layout, module, panel, theme. API: endpoint, hook, operation. Bundles combine several types into one package."
+        },
+        {
+          "title": "Anatomy of an endpoint",
+          "body": "The default export receives an Express router. Routes mount under the extension name. Use Directus services from context when you need permissions or database access."
+        },
+        {
+          "title": "When not to build",
+          "body": "Try a Flow, a preset, a field option, or a built-in interface first. Extensions are powerful, but they are also long-lived maintenance."
+        }
+      ],
+      "track": "api"
+    },
+    {
+      "slug": "websockets",
+      "title": "Real-time with WebSockets",
+      "sort": 4,
+      "outcome": "Subscribe to a collection and handle create, update, and delete events as they happen.",
+      "mental_model": [
+        "A **WebSocket** stays open; subscriptions push changes instead of polling.",
+        "Authenticate first, then subscribe with a collection, event filter, and field list.",
+        "Handle **ping** with **pong**, and use Redis pub/sub when you run more than one Directus instance."
+      ],
+      "lab": {
+        "title": "Watch a record arrive live",
+        "instructions": "Open a subscription to lab_notes, then create a note. The create event should arrive in the console without a page refresh. This demo uses Directus public WebSocket mode, so it can only see the public lab_notes read permission.",
+        "starter": "const ws = await directus.ws();\n\nws.onmessage = (event) => {\n  const message = JSON.parse(event.data);\n  console.log(message);\n\n  if (message.type === 'subscription' && message.event === 'create') {\n    console.log('Live note:', message.data[0]);\n    ws.close();\n  }\n};\n\nws.onopen = () => {\n  ws.send(JSON.stringify({\n    type: 'subscribe',\n    collection: 'lab_notes',\n    event: 'create',\n    query: { fields: ['id', 'title', 'status'] }\n  }));\n\n  setTimeout(async () => {\n    const note = await directus.post('/items/lab_notes', {\n      title: 'Live from WebSockets',\n      body: 'This record was created after the subscription started.',\n      status: 'draft'\n    });\n\n    console.log('Created:', note.data.id);\n  }, 400);\n};",
+        "solution": "const ws = await directus.ws();\n\nws.onmessage = (event) => {\n  const message = JSON.parse(event.data);\n  console.log(message);\n\n  if (message.type === 'subscription' && message.event === 'create') {\n    console.log('Live note:', message.data[0]);\n    ws.close();\n  }\n};\n\nws.onopen = () => {\n  ws.send(JSON.stringify({\n    type: 'subscribe',\n    collection: 'lab_notes',\n    event: 'create',\n    query: { fields: ['id', 'title', 'status'] }\n  }));\n\n  setTimeout(async () => {\n    const note = await directus.post('/items/lab_notes', {\n      title: 'Live from WebSockets',\n      body: 'This record was created after the subscription started.',\n      status: 'draft'\n    });\n\n    console.log('Created:', note.data.id);\n  }, 400);\n};",
+        "expected": "{ type: 'subscription', event: 'init' }\nCreated: 8f4c…\n{ type: 'subscription', event: 'create', data: [{ id: '8f4c…', title: 'Live from WebSockets', status: 'draft' }] }\nLive note: { id: '8f4c…', title: 'Live from WebSockets', status: 'draft' }",
+        "hints": [
+          "Subscribe before creating the note.",
+          "The confirmation event is subscription with event init.",
+          "The create event contains only the fields you requested."
+        ],
+        "timeoutMs": 10000,
+        "keepAliveMs": 6000,
+        "kind": "api"
+      },
+      "takeaway": "Use WebSockets for live dashboards and collaborative screens; keep REST for normal reads and writes.",
+      "knowledge_check": {
+        "question": "What event confirms that a subscription is active?",
+        "options": [
+          "subscription with event: init",
+          "ping",
+          "create",
+          "open"
+        ],
+        "answer": 0,
+        "explanation": "Directus replies with a subscription message and event: init as soon as the subscription is registered."
+      },
+      "deep_dive": [
+        {
+          "title": "The subscribe message",
+          "body": "Send type: subscribe, a collection, an optional event filter, and an optional fields query. The server sends create, update, and delete events."
+        },
+        {
+          "title": "Authentication",
+          "body": "Send an auth message with a valid access token before subscribing. Public read permissions can make a demo public, but production data should be scoped."
+        },
+        {
+          "title": "Scaling",
+          "body": "One Directus instance can hold the connection. With multiple instances, use Redis pub/sub so every instance broadcasts to its own clients."
+        }
+      ],
+      "track": "api"
+    },
+    {
+      "slug": "capstone",
+      "title": "Capstone: order automation",
+      "sort": 5,
+      "outcome": "Combine a trigger, validation, an external call, a write-back, and a response in one Flow.",
+      "mental_model": [
+        "Design the **data chain** first: what each operation receives and returns.",
+        "Validate early and fail loudly. Keep external calls idempotent.",
+        "Write the result back to Directus so the automation is observable."
+      ],
+      "lab": {
+        "title": "Run the order Flow",
+        "instructions": "Send an order to the capstone webhook. The Flow validates it, applies a tier discount, calls mock shipping, saves a note, and returns a summary. Try a total of 0 to see the validation failure.",
+        "starter": "const result = await directus.post('/flows/trigger/lab-order', {\n  id: 'ORD-1042',\n  total: 249.99,\n  tier: 'gold',\n  email: 'sam@example.com'\n});\n\nconsole.log('Order result:', result);\nreturn result;",
+        "solution": "const result = await directus.post('/flows/trigger/lab-order', {\n  id: 'ORD-1042',\n  total: 249.99,\n  tier: 'gold',\n  email: 'sam@example.com'\n});\n\nconsole.log('Order result:', result);\nreturn result;",
+        "expected": "{\n  \"order_id\": \"ORD-1042\",\n  \"discount\": 37.5,\n  \"total\": 212.49,\n  \"shipping\": {\n    \"order_id\": \"ORD-1042\",\n    \"tracking\": \"LUM-1042\",\n    \"carrier\": \"Lumina Express\",\n    \"eta\": \"2-3 days\",\n    \"status\": \"queued\"\n  },\n  \"saved_note_id\": \"…\"\n}",
+        "hints": [
+          "gold gets 15%, silver 10%, bronze 5%.",
+          "Try total: 0 to see the Flow reject the order.",
+          "Find the saved note in Directus under lab_notes."
+        ],
+        "timeoutMs": 8000,
+        "keepAliveMs": 0,
+        "kind": "api"
+      },
+      "takeaway": "Production automation is a chain of small, observable steps — not one giant script.",
+      "knowledge_check": {
+        "question": "What should happen when the shipping API times out?",
+        "options": [
+          "Ignore it and report success",
+          "Retry safely, using an idempotency key",
+          "Charge the customer twice",
+          "Delete the order"
+        ],
+        "answer": 1,
+        "explanation": "Retries are normal. A stable idempotency key lets the receiver detect the duplicate and return the original result instead of creating a second shipment."
+      },
+      "deep_dive": [
+        {
+          "title": "Failure branches",
+          "body": "Give each external call a reject path. Log the input, the response, and the error so a failed run can be replayed."
+        },
+        {
+          "title": "Idempotency",
+          "body": "Use the order ID as the idempotency key. Store it before calling the external service, and check it before doing the side effect."
+        },
+        {
+          "title": "Observability",
+          "body": "Write a record back to Directus, add a status field, and keep the Flow log. If something fails at 2 a.m., you want a trail."
+        }
+      ],
+      "track": "api"
+    },
+    {
+      "slug": "build-a-button",
+      "title": "Build a button",
+      "sort": 6,
+      "track": "ui",
+      "outcome": "Create a primary button with clear states, a comfortable hit area, and a visible keyboard focus.",
+      "mental_model": [
+        "**States are part of the component.** Default, hover, active, focus-visible, and disabled each tell the user something.",
+        "**Affordance beats decoration.** A button should look pressable and clearly name the action.",
+        "**Accessibility is design.** Contrast, a 44px target, and a focus ring make the button usable by everyone."
+      ],
+      "lab": {
+        "kind": "component",
+        "title": "Style the primary button",
+        "brief": "Start with a plain button. Add the states and make it feel like one component, not five one-off styles.",
+        "checklist": [
+          "Comfortable hit area (at least 44px tall)",
+          "Hover and active feedback",
+          "Visible focus-visible ring",
+          "Disabled state",
+          "Readable contrast"
+        ],
+        "starter": {
+          "html": "<button class=\"button\" type=\"button\">Save changes</button>",
+          "css": "body {\n  display: grid;\n  place-items: center;\n  min-height: 100vh;\n  margin: 0;\n  background: #f8fafc;\n}\n\n.button {\n  font: inherit;\n  border: 0;\n  border-radius: 8px;\n  padding: 12px 20px;\n  background: #111827;\n  color: #ffffff;\n  cursor: pointer;\n}",
+          "js": "console.log('Button mounted');"
+        },
+        "solution": {
+          "html": "<main class=\"button-demo\">\n  <button class=\"button\" type=\"button\">Save changes</button>\n  <button class=\"button\" type=\"button\" disabled>Disabled</button>\n</main>",
+          "css": "body {\n  margin: 0;\n  background: #f8fafc;\n}\n\n.button-demo {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 12px;\n  flex-wrap: wrap;\n  min-height: 100vh;\n  padding: 24px;\n}\n\n.button {\n  font: inherit;\n  min-height: 44px;\n  border: 1px solid #1d4ed8;\n  border-radius: 9px;\n  padding: 11px 20px;\n  background: #2563eb;\n  color: #ffffff;\n  font-weight: 600;\n  cursor: pointer;\n  transition: background 150ms ease, transform 150ms ease, box-shadow 150ms ease;\n}\n\n.button:hover {\n  background: #1d4ed8;\n}\n\n.button:active {\n  transform: translateY(1px);\n}\n\n.button:focus-visible {\n  outline: 3px solid #93c5fd;\n  outline-offset: 3px;\n}\n\n.button:disabled {\n  border-color: #cbd5e1;\n  background: #e2e8f0;\n  color: #64748b;\n  cursor: not-allowed;\n}",
+          "js": "console.log('Button states ready');"
+        },
+        "hints": [
+          "Use :focus-visible, not just :focus.",
+          "A 44px minimum height is a good mobile target.",
+          "Disabled styles still need readable text."
+        ],
+        "device": "desktop"
+      },
+      "takeaway": "A button is a small state machine: every state should look intentional and remain accessible.",
+      "knowledge_check": {
+        "question": "Which state is essential for keyboard users but often forgotten?",
+        "options": [
+          "focus-visible",
+          "hover",
+          "disabled",
+          "active"
+        ],
+        "answer": 0,
+        "explanation": "focus-visible shows a clear ring when the button is reached with the keyboard, without showing it for every mouse click."
+      },
+      "deep_dive": [
+        {
+          "title": "Contrast",
+          "body": "Text needs roughly 4.5:1 contrast; interactive boundaries and focus indicators need roughly 3:1. Test the disabled state too, even though disabled text has more leeway."
+        },
+        {
+          "title": "Hit area",
+          "body": "A 44x44px target is comfortable on touch screens. Padding is usually a better way to reach it than increasing font size."
+        },
+        {
+          "title": "Loading and disabled",
+          "body": "Disabled prevents action; loading explains why action is temporarily unavailable. Do not use one as a substitute for the other."
+        }
+      ]
+    },
+    {
+      "slug": "build-a-form",
+      "title": "Build a form",
+      "sort": 7,
+      "track": "ui",
+      "outcome": "Create a semantic form with labeled fields, sensible input types, and a clear success state.",
+      "mental_model": [
+        "**Labels are part of the input.** A placeholder is not a label.",
+        "**Use the right input type.** Email, text, and textarea change the keyboard and validation behavior.",
+        "**Feedback closes the loop.** The form should say what happened after submit."
+      ],
+      "lab": {
+        "kind": "component",
+        "title": "Build a contact form",
+        "brief": "Build a name, email, and message form. Validate on submit and show a success message instead of reloading the page.",
+        "checklist": [
+          "Every field has a label",
+          "Email uses type=email",
+          "Required fields are marked",
+          "Submit shows a success message",
+          "Keyboard focus is visible"
+        ],
+        "starter": {
+          "html": "<main class=\"page\">\n  <form id=\"contact\" class=\"form\">\n    <header class=\"form-head\">\n      <p class=\"eyebrow\">Directus</p>\n      <h1>Send a message</h1>\n      <p>We usually reply within two working days.</p>\n    </header>\n\n    <input name=\"name\" placeholder=\"Name\" />\n    <input name=\"email\" placeholder=\"Email\" />\n    <textarea name=\"message\" rows=\"4\" placeholder=\"Message\"></textarea>\n\n    <button type=\"submit\">Send message</button>\n    <p id=\"status\" class=\"status\" role=\"status\"></p>\n  </form>\n</main>",
+          "css": "body {\n  margin: 0;\n  background: #f0f4f9;\n  color: #4f5464;\n  font-family: Inter, system-ui, sans-serif;\n}\n\n.page {\n  min-height: 100vh;\n  display: grid;\n  place-items: center;\n  padding: 24px;\n  background:\n    radial-gradient(circle at 50% -10%, rgba(102, 68, 255, 0.12), transparent 50%),\n    #f0f4f9;\n}\n\n.form {\n  width: min(100%, 440px);\n  display: grid;\n  gap: 18px;\n  padding: 32px;\n  border: 1px solid #e4eaf1;\n  border-radius: 6px;\n  background: #ffffff;\n  box-shadow: 0 18px 40px rgba(23, 41, 64, 0.08);\n}\n\n.form-head {\n  display: grid;\n  gap: 6px;\n}\n\n.eyebrow {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  margin: 0;\n  color: #6644ff;\n  font-size: 11px;\n  font-weight: 700;\n  letter-spacing: 0.12em;\n  text-transform: uppercase;\n}\n\n.eyebrow::before {\n  content: \"\";\n  width: 10px;\n  height: 10px;\n  border-radius: 2px;\n  background: #6644ff;\n}\n\nh1 {\n  margin: 0;\n  color: #172940;\n  font-size: 24px;\n  font-weight: 600;\n  line-height: 1.2;\n  letter-spacing: -0.02em;\n}\n\n.form-head p:last-child {\n  margin: 0;\n  color: #6f8098;\n  font-size: 13px;\n  line-height: 1.55;\n}\n\ninput,\ntextarea {\n  width: 100%;\n  padding: 13px 14px;\n  border: 1px solid #d3dae4;\n  border-radius: 6px;\n  background: #ffffff;\n  color: #4f5464;\n  font: inherit;\n  transition: border-color 150ms ease;\n}\n\ninput::placeholder,\ntextarea::placeholder {\n  color: #a2b5cd;\n}\n\ninput:hover,\ntextarea:hover {\n  border-color: #b9c5d6;\n}\n\ntextarea {\n  min-height: 112px;\n  resize: vertical;\n}\n\nbutton {\n  min-height: 44px;\n  border: 0;\n  border-radius: 6px;\n  padding: 0 16px;\n  background: #6644ff;\n  color: #ffffff;\n  font: inherit;\n  font-size: 15px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: background 150ms ease;\n}\n\nbutton:hover {\n  background: #5636e0;\n}\n\nbutton:active {\n  background: #4a2fcc;\n}\n\n.status {\n  margin: 0;\n  min-height: 1.4em;\n  color: #6f8098;\n  font-size: 12px;\n}\n\n@media (max-width: 480px) {\n  .page {\n    padding: 16px;\n  }\n\n  .form {\n    padding: 24px;\n  }\n}",
+          "js": "const form = document.getElementById('contact');\n\nform.addEventListener('submit', (event) => {\n  event.preventDefault();\n  console.log('Submit handler ready — build the success state');\n});"
+        },
+        "solution": {
+          "html": "<main class=\"page\">\n  <form id=\"contact\" class=\"form\" novalidate>\n    <header class=\"form-head\">\n      <p class=\"eyebrow\">Directus</p>\n      <h1>Send a message</h1>\n      <p>We usually reply within two working days.</p>\n    </header>\n\n    <div class=\"field\">\n      <label for=\"name\">Name <span class=\"required\" aria-hidden=\"true\">*</span></label>\n      <input id=\"name\" name=\"name\" type=\"text\" autocomplete=\"name\" placeholder=\"Ada Lovelace\" required />\n    </div>\n\n    <div class=\"field\">\n      <label for=\"email\">Email <span class=\"required\" aria-hidden=\"true\">*</span></label>\n      <input id=\"email\" name=\"email\" type=\"email\" autocomplete=\"email\" placeholder=\"ada@example.com\" required />\n    </div>\n\n    <div class=\"field\">\n      <label for=\"message\">Message <span class=\"required\" aria-hidden=\"true\">*</span></label>\n      <textarea id=\"message\" name=\"message\" rows=\"4\" placeholder=\"What are you building?\" required></textarea>\n    </div>\n\n    <button type=\"submit\">Send message</button>\n    <p id=\"status\" class=\"status\" role=\"status\"></p>\n  </form>\n</main>",
+          "css": "body {\n  margin: 0;\n  background: #f0f4f9;\n  color: #4f5464;\n  font-family: Inter, system-ui, sans-serif;\n}\n\n.page {\n  min-height: 100vh;\n  display: grid;\n  place-items: center;\n  padding: 24px;\n  background:\n    radial-gradient(circle at 50% -10%, rgba(102, 68, 255, 0.12), transparent 50%),\n    #f0f4f9;\n}\n\n.form {\n  width: min(100%, 440px);\n  display: grid;\n  gap: 18px;\n  padding: 32px;\n  border: 1px solid #e4eaf1;\n  border-radius: 6px;\n  background: #ffffff;\n  box-shadow: 0 18px 40px rgba(23, 41, 64, 0.08);\n}\n\n.form-head {\n  display: grid;\n  gap: 6px;\n}\n\n.eyebrow {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  margin: 0;\n  color: #6644ff;\n  font-size: 11px;\n  font-weight: 700;\n  letter-spacing: 0.12em;\n  text-transform: uppercase;\n}\n\n.eyebrow::before {\n  content: \"\";\n  width: 10px;\n  height: 10px;\n  border-radius: 2px;\n  background: #6644ff;\n}\n\nh1 {\n  margin: 0;\n  color: #172940;\n  font-size: 24px;\n  font-weight: 600;\n  line-height: 1.2;\n  letter-spacing: -0.02em;\n}\n\n.form-head p:last-child {\n  margin: 0;\n  color: #6f8098;\n  font-size: 13px;\n  line-height: 1.55;\n}\n\n.field {\n  display: grid;\n  gap: 6px;\n}\n\nlabel {\n  color: #172940;\n  font-size: 13px;\n  font-weight: 600;\n}\n\n.required {\n  color: #6644ff;\n}\n\ninput,\ntextarea {\n  width: 100%;\n  padding: 13px 14px;\n  border: 1px solid #d3dae4;\n  border-radius: 6px;\n  background: #ffffff;\n  color: #4f5464;\n  font: inherit;\n  transition: border-color 150ms ease, box-shadow 150ms ease;\n}\n\ninput::placeholder,\ntextarea::placeholder {\n  color: #a2b5cd;\n}\n\ninput:hover,\ntextarea:hover {\n  border-color: #b9c5d6;\n}\n\ninput:focus-visible,\ntextarea:focus-visible {\n  outline: 2px solid #6644ff;\n  outline-offset: 2px;\n  border-color: #6644ff;\n}\n\ntextarea {\n  min-height: 112px;\n  resize: vertical;\n}\n\nbutton {\n  min-height: 44px;\n  border: 0;\n  border-radius: 6px;\n  padding: 0 16px;\n  background: #6644ff;\n  color: #ffffff;\n  font: inherit;\n  font-size: 15px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: background 150ms ease;\n}\n\nbutton:hover {\n  background: #5636e0;\n}\n\nbutton:active {\n  background: #4a2fcc;\n}\n\nbutton:focus-visible {\n  outline: 2px solid #6644ff;\n  outline-offset: 2px;\n}\n\n.status {\n  margin: 0;\n  min-height: 1.4em;\n  color: #6f8098;\n  font-size: 12px;\n}\n\n.status[data-state] {\n  padding: 10px 12px;\n  border-radius: 6px;\n}\n\n.status[data-state=\"success\"] {\n  background: #e9fbf5;\n  color: #0b6b50;\n}\n\n.status[data-state=\"error\"] {\n  background: #fdeef1;\n  color: #b02a43;\n}\n\n@media (max-width: 480px) {\n  .page {\n    padding: 16px;\n  }\n\n  .form {\n    padding: 24px;\n  }\n}",
+          "js": "const form = document.getElementById('contact');\nconst status = document.getElementById('status');\n\nform.addEventListener('submit', (event) => {\n  event.preventDefault();\n\n  if (!form.checkValidity()) {\n    status.dataset.state = 'error';\n    status.textContent = 'Please fill in every field with a valid email.';\n    return;\n  }\n\n  status.dataset.state = 'success';\n  status.textContent = 'Message sent. We will reply within two working days.';\n  form.reset();\n});"
+        },
+        "hints": [
+          "Connect each label with for and id.",
+          "Use autocomplete=name and autocomplete=email.",
+          "role=status announces the success message."
+        ],
+        "device": "mobile"
+      },
+      "takeaway": "A form is a conversation: labels ask, input types guide, and status messages answer.",
+      "knowledge_check": {
+        "question": "Which attributes connect a label to an input?",
+        "options": [
+          "for + id",
+          "placeholder",
+          "name",
+          "aria-hidden"
+        ],
+        "answer": 0,
+        "explanation": "The label's for attribute must match the input's id. Clicking the label then focuses the input, and screen readers announce them together."
+      },
+      "deep_dive": [
+        {
+          "title": "Labels vs placeholders",
+          "body": "A placeholder disappears after typing and is not a reliable label. Keep a visible label above the field and use the placeholder for an example."
+        },
+        {
+          "title": "Validation",
+          "body": "Use the right input type and required attribute first. Add custom messages only when the native behavior is not clear enough."
+        },
+        {
+          "title": "Accessible status",
+          "body": "role=status announces a polite update like “Message sent.” Move focus only when the next action requires it."
+        }
+      ]
+    },
+    {
+      "slug": "design-a-form",
+      "title": "Design a form",
+      "sort": 8,
+      "track": "ui",
+      "outcome": "Finish a designed form with visible focus, clear status feedback, and a layout that holds up on small screens.",
+      "mental_model": [
+        "**States are part of the design.** Focus, success, and error should be visible, not implied.",
+        "**Spacing is structure.** Group related fields and give the submit action room.",
+        "**Feedback is visual and textual.** Color alone does not explain an error."
+      ],
+      "lab": {
+        "kind": "component",
+        "title": "Design the form states",
+        "brief": "This form already uses the Directus card style. Finish the interaction design: add Directus focus rings, a status that uses text and color, and a single-column layout below 560px.",
+        "checklist": [
+          "Branded focus ring on every control",
+          "Status uses text and color",
+          "Name and email stack below 560px",
+          "Card stays balanced at 360px",
+          "Labels stay visible above each field"
+        ],
+        "starter": {
+          "html": "<main class=\"page\">\n  <form id=\"contact\" class=\"card\" novalidate>\n    <header class=\"card-head\">\n      <p class=\"eyebrow\">Directus</p>\n      <h1>Let’s talk</h1>\n      <p>Tell us what you’re building. We’ll reply within two working days.</p>\n    </header>\n\n    <div class=\"field-row\">\n      <div class=\"field\">\n        <label for=\"name\">Name <span class=\"required\" aria-hidden=\"true\">*</span></label>\n        <input id=\"name\" name=\"name\" type=\"text\" autocomplete=\"name\" placeholder=\"Ada Lovelace\" required />\n      </div>\n      <div class=\"field\">\n        <label for=\"email\">Email <span class=\"required\" aria-hidden=\"true\">*</span></label>\n        <input id=\"email\" name=\"email\" type=\"email\" autocomplete=\"email\" placeholder=\"ada@example.com\" required />\n      </div>\n    </div>\n\n    <div class=\"field\">\n      <label for=\"message\">Message <span class=\"required\" aria-hidden=\"true\">*</span></label>\n      <textarea id=\"message\" name=\"message\" rows=\"4\" placeholder=\"What are you building?\" required></textarea>\n    </div>\n\n    <button type=\"submit\">Send message</button>\n    <p id=\"status\" class=\"status\" role=\"status\"></p>\n  </form>\n</main>",
+          "css": "body {\n  margin: 0;\n  background: #f0f4f9;\n  color: #4f5464;\n  font-family: Inter, system-ui, sans-serif;\n}\n\n.page {\n  min-height: 100vh;\n  display: grid;\n  place-items: center;\n  padding: 24px;\n  background:\n    radial-gradient(circle at 50% -10%, rgba(102, 68, 255, 0.12), transparent 50%),\n    #f0f4f9;\n}\n\n.card {\n  width: min(100%, 520px);\n  display: grid;\n  gap: 20px;\n  padding: 32px;\n  border: 1px solid #e4eaf1;\n  border-radius: 8px;\n  background: #ffffff;\n  box-shadow: 0 18px 40px rgba(23, 41, 64, 0.08);\n}\n\n.card-head {\n  display: grid;\n  gap: 6px;\n}\n\n.eyebrow {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  margin: 0;\n  color: #6644ff;\n  font-size: 11px;\n  font-weight: 700;\n  letter-spacing: 0.12em;\n  text-transform: uppercase;\n}\n\n.eyebrow::before {\n  content: \"\";\n  width: 10px;\n  height: 10px;\n  border-radius: 2px;\n  background: #6644ff;\n}\n\nh1 {\n  margin: 0;\n  color: #172940;\n  font-size: 26px;\n  font-weight: 600;\n  line-height: 1.2;\n  letter-spacing: -0.02em;\n}\n\n.card-head p:last-child {\n  margin: 0;\n  color: #6f8098;\n  font-size: 13px;\n  line-height: 1.55;\n}\n\n.field-row {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 12px;\n}\n\n.field {\n  display: grid;\n  gap: 6px;\n}\n\nlabel {\n  color: #172940;\n  font-size: 13px;\n  font-weight: 600;\n}\n\n.required {\n  color: #6644ff;\n}\n\ninput,\ntextarea {\n  width: 100%;\n  padding: 13px 14px;\n  border: 1px solid #d3dae4;\n  border-radius: 6px;\n  background: #ffffff;\n  color: #4f5464;\n  font: inherit;\n  transition: border-color 150ms ease;\n}\n\ninput::placeholder,\ntextarea::placeholder {\n  color: #a2b5cd;\n}\n\ninput:hover,\ntextarea:hover {\n  border-color: #b9c5d6;\n}\n\ntextarea {\n  min-height: 112px;\n  resize: vertical;\n}\n\nbutton {\n  min-height: 44px;\n  border: 0;\n  border-radius: 6px;\n  padding: 0 16px;\n  background: #6644ff;\n  color: #ffffff;\n  font: inherit;\n  font-size: 15px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: background 150ms ease;\n}\n\nbutton:hover {\n  background: #5636e0;\n}\n\nbutton:active {\n  background: #4a2fcc;\n}\n\n.status {\n  margin: 0;\n  min-height: 1.4em;\n  color: #6f8098;\n  font-size: 12px;\n}",
+          "js": "const form = document.getElementById('contact');\nconst status = document.getElementById('status');\n\nform.addEventListener('submit', (event) => {\n  event.preventDefault();\n\n  if (!form.checkValidity()) {\n    status.textContent = 'Please complete every field.';\n    return;\n  }\n\n  status.textContent = 'Message sent. We will reply soon.';\n  form.reset();\n});"
+        },
+        "solution": {
+          "html": "<main class=\"page\">\n  <form id=\"contact\" class=\"card\" novalidate>\n    <header class=\"card-head\">\n      <p class=\"eyebrow\">Directus</p>\n      <h1>Let’s talk</h1>\n      <p>Tell us what you’re building. We’ll reply within two working days.</p>\n    </header>\n\n    <div class=\"field-row\">\n      <div class=\"field\">\n        <label for=\"name\">Name <span class=\"required\" aria-hidden=\"true\">*</span></label>\n        <input id=\"name\" name=\"name\" type=\"text\" autocomplete=\"name\" placeholder=\"Ada Lovelace\" required />\n      </div>\n      <div class=\"field\">\n        <label for=\"email\">Email <span class=\"required\" aria-hidden=\"true\">*</span></label>\n        <input id=\"email\" name=\"email\" type=\"email\" autocomplete=\"email\" placeholder=\"ada@example.com\" required />\n      </div>\n    </div>\n\n    <div class=\"field\">\n      <label for=\"message\">Message <span class=\"required\" aria-hidden=\"true\">*</span></label>\n      <textarea id=\"message\" name=\"message\" rows=\"4\" placeholder=\"What are you building?\" required></textarea>\n    </div>\n\n    <button type=\"submit\">Send message</button>\n    <p id=\"status\" class=\"status\" role=\"status\"></p>\n  </form>\n</main>",
+          "css": "body {\n  margin: 0;\n  background: #f0f4f9;\n  color: #4f5464;\n  font-family: Inter, system-ui, sans-serif;\n}\n\n.page {\n  min-height: 100vh;\n  display: grid;\n  place-items: center;\n  padding: 24px;\n  background:\n    radial-gradient(circle at 50% -10%, rgba(102, 68, 255, 0.12), transparent 50%),\n    #f0f4f9;\n}\n\n.card {\n  width: min(100%, 520px);\n  display: grid;\n  gap: 20px;\n  padding: 32px;\n  border: 1px solid #e4eaf1;\n  border-radius: 8px;\n  background: #ffffff;\n  box-shadow: 0 18px 40px rgba(23, 41, 64, 0.08);\n}\n\n.card-head {\n  display: grid;\n  gap: 6px;\n}\n\n.eyebrow {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  margin: 0;\n  color: #6644ff;\n  font-size: 11px;\n  font-weight: 700;\n  letter-spacing: 0.12em;\n  text-transform: uppercase;\n}\n\n.eyebrow::before {\n  content: \"\";\n  width: 10px;\n  height: 10px;\n  border-radius: 2px;\n  background: #6644ff;\n}\n\nh1 {\n  margin: 0;\n  color: #172940;\n  font-size: 26px;\n  font-weight: 600;\n  line-height: 1.2;\n  letter-spacing: -0.02em;\n}\n\n.card-head p:last-child {\n  margin: 0;\n  color: #6f8098;\n  font-size: 13px;\n  line-height: 1.55;\n}\n\n.field-row {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 12px;\n}\n\n.field {\n  display: grid;\n  gap: 6px;\n}\n\nlabel {\n  color: #172940;\n  font-size: 13px;\n  font-weight: 600;\n}\n\n.required {\n  color: #6644ff;\n}\n\ninput,\ntextarea {\n  width: 100%;\n  padding: 13px 14px;\n  border: 1px solid #d3dae4;\n  border-radius: 6px;\n  background: #ffffff;\n  color: #4f5464;\n  font: inherit;\n  transition: border-color 150ms ease;\n}\n\ninput::placeholder,\ntextarea::placeholder {\n  color: #a2b5cd;\n}\n\ninput:hover,\ntextarea:hover {\n  border-color: #b9c5d6;\n}\n\ntextarea {\n  min-height: 112px;\n  resize: vertical;\n}\n\nbutton {\n  min-height: 44px;\n  border: 0;\n  border-radius: 6px;\n  padding: 0 16px;\n  background: #6644ff;\n  color: #ffffff;\n  font: inherit;\n  font-size: 15px;\n  font-weight: 600;\n  cursor: pointer;\n  transition: background 150ms ease;\n}\n\nbutton:hover {\n  background: #5636e0;\n}\n\nbutton:active {\n  background: #4a2fcc;\n}\n\n.status {\n  margin: 0;\n  min-height: 1.4em;\n  color: #6f8098;\n  font-size: 12px;\n}\n\ninput:focus-visible,\ntextarea:focus-visible {\n  outline: 2px solid #6644ff;\n  outline-offset: 2px;\n  border-color: #6644ff;\n}\n\nbutton:focus-visible {\n  outline: 2px solid #6644ff;\n  outline-offset: 2px;\n}\n\n.status[data-state] {\n  padding: 10px 12px;\n  border-radius: 6px;\n}\n\n.status[data-state=\"success\"] {\n  background: #e9fbf5;\n  color: #0b6b50;\n}\n\n.status[data-state=\"error\"] {\n  background: #fdeef1;\n  color: #b02a43;\n}\n\n@media (max-width: 560px) {\n  .card {\n    padding: 24px;\n  }\n\n  .field-row {\n    grid-template-columns: 1fr;\n  }\n}",
+          "js": "const form = document.getElementById('contact');\nconst status = document.getElementById('status');\n\nform.addEventListener('submit', (event) => {\n  event.preventDefault();\n\n  if (!form.checkValidity()) {\n    status.dataset.state = 'error';\n    status.textContent = 'Please complete every field with a valid email.';\n    return;\n  }\n\n  status.dataset.state = 'success';\n  status.textContent = 'Message sent. We will reply within two working days.';\n  form.reset();\n});"
+        },
+        "hints": [
+          "Use :focus-visible with #6644ff.",
+          "Set status.dataset.state before writing the message.",
+          "Add one media query at 560px; keep the card padding comfortable."
+        ],
+        "device": "mobile"
+      },
+      "takeaway": "A designed form stays clear when it is focused, invalid, or narrow.",
+      "knowledge_check": {
+        "question": "Besides turning red, what should an error message do?",
+        "options": [
+          "Explain what to fix and tie to the field",
+          "Disappear quickly",
+          "Only style the border",
+          "Block the page"
+        ],
+        "answer": 0,
+        "explanation": "An error should say what went wrong, how to fix it, and be associated with the field so it is announced and easy to find."
+      },
+      "deep_dive": [
+        {
+          "title": "8-point spacing",
+          "body": "Use a small scale such as 8, 16, 24, 32. Consistent spacing creates hierarchy without adding borders or decoration."
+        },
+        {
+          "title": "Error placement",
+          "body": "Place the message next to the field it belongs to, mark the field with aria-invalid, and keep the original label visible."
+        },
+        {
+          "title": "Responsive forms",
+          "body": "A single-column form is usually the best mobile layout. Keep the submit action full width and the focus ring visible."
+        }
+      ]
+    },
+    {
+      "slug": "build-directus-relational-picker",
+      "title": "Build a relational item picker",
+      "sort": 9,
+      "track": "ui",
+      "outcome": "Design a Directus relational picker that exposes collection context, selected records, and a clear way to change the relationship.",
+      "mental_model": [
+        "**Relationships are content context.** A picker should tell editors which collection they are choosing from before showing the selected item.",
+        "**Selection is state.** Empty, selected, loading, and invalid states need different labels and actions.",
+        "**The interface should stay reversible.** Clear and change actions are safer than forcing an editor to reopen the entire form."
+      ],
+      "lab": {
+        "kind": "component",
+        "componentKind": "relational-picker",
+        "surface": "admin",
+        "publishable": false,
+        "title": "Build a relational item picker",
+        "brief": "Create a picker surface for a Directus article relationship. Make the current selection obvious, show collection context, and keep the open and clear actions usable by keyboard.",
+        "checklist": [
+          "Collection context is visible",
+          "Selected item has a readable name",
+          "Empty and selected states differ",
+          "Change and clear actions have names",
+          "The picker remains usable on a narrow screen"
+        ],
+        "starter": {
+          "html": "<section class=\"panel\" aria-labelledby=\"panel-title\"><div class=\"panel-head\"><div><p class=\"eyebrow\">CMS field view</p><h2 id=\"panel-title\">Related article</h2><p>Choose an article from the Directus content collection.</p></div><span class=\"badge\">relationship</span></div><div class=\"rows\"><div class=\"row\"><span>No article selected</span><strong>0</strong></div><div class=\"row\"><span>Getting started with APIs</span><strong>1</strong></div></div><button class=\"action\" type=\"button\">Open details</button></section>",
+          "css": "body{margin:0;background:#f4f7fb;color:#172940;font-family:Inter,system-ui,sans-serif}.panel{width:min(100%,520px);margin:24px auto;padding:24px;border:1px solid #dfe7f1;border-radius:16px;background:#fff;box-shadow:0 16px 40px rgba(15,23,42,.1)}.panel-head{display:flex;justify-content:space-between;gap:16px}.eyebrow{margin:0 0 6px;color:#6644ff;font-size:12px;text-transform:uppercase;letter-spacing:.08em}.panel h2{margin:0}.panel p{color:#64748b;line-height:1.5}.badge{padding:6px 10px;border-radius:999px;background:#6644ff;color:#fff;font-size:12px;white-space:nowrap}.rows{display:grid;gap:8px;margin:20px 0}.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e8edf3}.action{border:0;border-radius:8px;padding:10px 14px;background:#6644ff;color:#fff;font-weight:600}.action:focus-visible{outline:3px solid #111827;outline-offset:3px}",
+          "js": "console.log('relational-picker ready')"
+        },
+        "hints": [
+          "Start with the selected record, then design the empty state.",
+          "Use a collection label such as Articles or Authors.",
+          "Keep the clear action separate from the primary picker action."
+        ],
+        "device": "responsive"
+      },
+      "takeaway": "Design a Directus relational picker that exposes collection context, selected records, and a clear way to change the relationship.",
+      "knowledge_check": {
+        "question": "What makes this CMS-specific?",
+        "options": [
+          "Use the CMS-supported field behavior and its real state",
+          "Hide all state from the editor",
+          "Use color without text",
+          "Hard-code the value in CSS"
+        ],
+        "answer": 0,
+        "explanation": "The component should reflect the CMS feature and preserve clear, editable state."
+      },
+      "deep_dive": [
+        {
+          "title": "State is part of the schema",
+          "body": "A useful admin component reflects the data shape and the CMS state instead of hiding important context behind decoration."
+        },
+        {
+          "title": "Responsive editing",
+          "body": "Admin interfaces should keep labels and actions reachable when the viewport becomes narrow."
+        },
+        {
+          "title": "Accessible controls",
+          "body": "Use labels, focus styles, and text alternatives so the component remains understandable without color or hover."
+        }
+      ]
+    },
+    {
+      "slug": "design-directus-permission-state",
+      "title": "Design a permission-aware state",
+      "sort": 10,
+      "track": "ui",
+      "outcome": "Create a Directus interface that explains why an editor can view, edit, or not access a field without exposing confusing controls.",
+      "mental_model": [
+        "**Access is part of the UI.** A disabled control without a reason makes an access rule feel like a broken interface.",
+        "**View and edit are different capabilities.** Show readable content even when mutation is unavailable.",
+        "**Explain the next step.** Restricted states should name the permission or role path when possible."
+      ],
+      "lab": {
+        "kind": "component",
+        "componentKind": "permission-state",
+        "surface": "admin",
+        "publishable": false,
+        "title": "Design a permission-aware state",
+        "brief": "Build a permission-aware field card with view, edit, and restricted states. Use copy and affordances that make Directus access rules understandable.",
+        "checklist": [
+          "View-only content remains readable",
+          "Restricted state explains the reason",
+          "Edit action appears only when allowed",
+          "Status is not conveyed by color alone",
+          "The layout works on mobile"
+        ],
+        "starter": {
+          "html": "<section class=\"panel\" aria-labelledby=\"panel-title\"><div class=\"panel-head\"><div><p class=\"eyebrow\">CMS field view</p><h2 id=\"panel-title\">SEO description</h2><p>A field state that communicates Directus permissions.</p></div><span class=\"badge\">field access</span></div><div class=\"rows\"><div class=\"row\"><span>View</span><strong>1</strong></div><div class=\"row\"><span>Edit</span><strong>0</strong></div></div><button class=\"action\" type=\"button\">Open details</button></section>",
+          "css": "body{margin:0;background:#f4f7fb;color:#172940;font-family:Inter,system-ui,sans-serif}.panel{width:min(100%,520px);margin:24px auto;padding:24px;border:1px solid #dfe7f1;border-radius:16px;background:#fff;box-shadow:0 16px 40px rgba(15,23,42,.1)}.panel-head{display:flex;justify-content:space-between;gap:16px}.eyebrow{margin:0 0 6px;color:#0f766e;font-size:12px;text-transform:uppercase;letter-spacing:.08em}.panel h2{margin:0}.panel p{color:#64748b;line-height:1.5}.badge{padding:6px 10px;border-radius:999px;background:#0f766e;color:#fff;font-size:12px;white-space:nowrap}.rows{display:grid;gap:8px;margin:20px 0}.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e8edf3}.action{border:0;border-radius:8px;padding:10px 14px;background:#0f766e;color:#fff;font-weight:600}.action:focus-visible{outline:3px solid #111827;outline-offset:3px}",
+          "js": "console.log('permission-state ready')"
+        },
+        "hints": [
+          "Compare an editor role with a read-only role.",
+          "Use a lock icon only as support for text.",
+          "Do not show a fake save button in the restricted state."
+        ],
+        "device": "responsive"
+      },
+      "takeaway": "Create a Directus interface that explains why an editor can view, edit, or not access a field without exposing confusing controls.",
+      "knowledge_check": {
+        "question": "What makes this CMS-specific?",
+        "options": [
+          "Use the CMS-supported field behavior and its real state",
+          "Hide all state from the editor",
+          "Use color without text",
+          "Hard-code the value in CSS"
+        ],
+        "answer": 0,
+        "explanation": "The component should reflect the CMS feature and preserve clear, editable state."
+      },
+      "deep_dive": [
+        {
+          "title": "State is part of the schema",
+          "body": "A useful admin component reflects the data shape and the CMS state instead of hiding important context behind decoration."
+        },
+        {
+          "title": "Responsive editing",
+          "body": "Admin interfaces should keep labels and actions reachable when the viewport becomes narrow."
+        },
+        {
+          "title": "Accessible controls",
+          "body": "Use labels, focus styles, and text alternatives so the component remains understandable without color or hover."
+        }
+      ]
+    },
+    {
+      "slug": "build-directus-flow-status",
+      "title": "Build a Flow run status panel",
+      "sort": 11,
+      "track": "ui",
+      "outcome": "Design a Directus Flow status panel that separates running, succeeded, and failed automation states with useful recovery actions.",
+      "mental_model": [
+        "**Automation needs feedback.** A trigger that ran successfully should say what happened, not only show a spinner.",
+        "**Failure is actionable.** Include a retry or inspect action and keep the error close to the failed step.",
+        "**Status has a lifecycle.** Running, success, and failure should not share one ambiguous message."
+      ],
+      "lab": {
+        "kind": "component",
+        "componentKind": "flow-status",
+        "surface": "admin",
+        "publishable": false,
+        "title": "Build a Flow run status panel",
+        "brief": "Compose a status panel for an order-enrichment Flow. Make the current run state, timestamp, and recovery action readable at a glance.",
+        "checklist": [
+          "Running, success, and failure differ",
+          "The last run time is visible",
+          "Failure includes a recovery action",
+          "Status text does not rely on color",
+          "The panel remains useful without live updates"
+        ],
+        "starter": {
+          "html": "<section class=\"panel\" aria-labelledby=\"panel-title\"><div class=\"panel-head\"><div><p class=\"eyebrow\">CMS field view</p><h2 id=\"panel-title\">Order enrichment Flow</h2><p>Automation status from a Directus Flow run.</p></div><span class=\"badge\">run state</span></div><div class=\"rows\"><div class=\"row\"><span>Running</span><strong>0</strong></div><div class=\"row\"><span>Succeeded</span><strong>1</strong></div><div class=\"row\"><span>Failed</span><strong>0</strong></div></div><button class=\"action\" type=\"button\">Open details</button></section>",
+          "css": "body{margin:0;background:#f4f7fb;color:#172940;font-family:Inter,system-ui,sans-serif}.panel{width:min(100%,520px);margin:24px auto;padding:24px;border:1px solid #dfe7f1;border-radius:16px;background:#fff;box-shadow:0 16px 40px rgba(15,23,42,.1)}.panel-head{display:flex;justify-content:space-between;gap:16px}.eyebrow{margin:0 0 6px;color:#d97706;font-size:12px;text-transform:uppercase;letter-spacing:.08em}.panel h2{margin:0}.panel p{color:#64748b;line-height:1.5}.badge{padding:6px 10px;border-radius:999px;background:#d97706;color:#fff;font-size:12px;white-space:nowrap}.rows{display:grid;gap:8px;margin:20px 0}.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e8edf3}.action{border:0;border-radius:8px;padding:10px 14px;background:#d97706;color:#fff;font-weight:600}.action:focus-visible{outline:3px solid #111827;outline-offset:3px}",
+          "js": "console.log('flow-status ready')"
+        },
+        "hints": [
+          "Use a status label plus a sentence of context.",
+          "Make retry secondary to the error explanation.",
+          "Keep the last successful run available after a failure."
+        ],
+        "device": "responsive"
+      },
+      "takeaway": "Design a Directus Flow status panel that separates running, succeeded, and failed automation states with useful recovery actions.",
+      "knowledge_check": {
+        "question": "What makes this CMS-specific?",
+        "options": [
+          "Use the CMS-supported field behavior and its real state",
+          "Hide all state from the editor",
+          "Use color without text",
+          "Hard-code the value in CSS"
+        ],
+        "answer": 0,
+        "explanation": "The component should reflect the CMS feature and preserve clear, editable state."
+      },
+      "deep_dive": [
+        {
+          "title": "State is part of the schema",
+          "body": "A useful admin component reflects the data shape and the CMS state instead of hiding important context behind decoration."
+        },
+        {
+          "title": "Responsive editing",
+          "body": "Admin interfaces should keep labels and actions reachable when the viewport becomes narrow."
+        },
+        {
+          "title": "Accessible controls",
+          "body": "Use labels, focus styles, and text alternatives so the component remains understandable without color or hover."
+        }
+      ]
+    },
+    {
+      "slug": "build-a-data-table",
+      "title": "Build a numeric data table",
+      "sort": 12,
+      "track": "ui",
+      "outcome": "Create a small table of numbers, style it with the shared build controls, save it to Directus, and read the same rows in the Level 8 chart.",
+      "mental_model": [
+        "**The form is the schema.** Title, caption, unit, and rows are the data contract the chart reads.",
+        "**Reuse the controls.** The same BuilderFields inputs and design tokens drive the form and the live table.",
+        "**Save, then fetch.** The table is stored in the CMS; Level 8 loads the newest saved table and turns it into a bar chart.",
+        "**Keep it small.** A short numeric table is easy to validate, reload, and chart."
+      ],
+      "lab": {
+        "kind": "dataset",
+        "title": "Save a table of numbers",
+        "brief": "Edit the rows and labels, adjust the design tokens, then save the table to Directus. The newest saved table becomes the saved-form chart in the Level 8 showcase.",
+        "checklist": [
+          "Every row has a label and a number",
+          "The table title describes the data",
+          "The unit is visible",
+          "The design tokens still pass contrast",
+          "The table is saved in the CMS"
+        ],
+        "starter": {
+          "content": {
+            "title": "Daily active learners",
+            "caption": "Two weeks of daily learners saved in Directus and reused by the Level 8 chart.",
+            "unit": "learners",
+            "rows": [
+              {
+                "label": "Mon W1",
+                "value": 120
+              },
+              {
+                "label": "Tue W1",
+                "value": 168
+              },
+              {
+                "label": "Wed W1",
+                "value": 142
+              },
+              {
+                "label": "Thu W1",
+                "value": 196
+              },
+              {
+                "label": "Fri W1",
+                "value": 231
+              },
+              {
+                "label": "Sat W1",
+                "value": 184
+              },
+              {
+                "label": "Sun W1",
+                "value": 96
+              },
+              {
+                "label": "Mon W2",
+                "value": 138
+              },
+              {
+                "label": "Tue W2",
+                "value": 175
+              },
+              {
+                "label": "Wed W2",
+                "value": 159
+              }
+            ]
+          },
+          "tokens": {
+            "accent": "#6644ff",
+            "radius": 14,
+            "spacing": 24
+          }
+        },
+        "hints": [
+          "Use the Number rows list to add, remove, or reorder rows.",
+          "The chart uses the row labels as categories and the values as bars.",
+          "Save again to update the same table, or reset to start a new version."
+        ],
+        "device": "desktop"
+      },
+      "takeaway": "A small, validated table saved in Directus is enough data to drive a real chart without exposing the CMS credentials.",
+      "knowledge_check": {
+        "question": "Where should the Level 8 chart get the numbers from the form?",
+        "options": [
+          "From the newest saved data-table component in Directus",
+          "From a hard-coded array in the chart component",
+          "From the browser's local storage only",
+          "From a CSS variable"
+        ],
+        "answer": 0,
+        "explanation": "The form saves its rows in Directus. The Level 8 server loader reads the newest saved table, validates the rows, and passes a small chart-ready series to the browser."
+      },
+      "deep_dive": [
+        {
+          "title": "Why store rows, not markup?",
+          "body": "The builder saves the labels and numbers as structured content. The preview can change without losing the data, and the chart reads the same values instead of scraping the table."
+        },
+        {
+          "title": "One contract, two views",
+          "body": "The form preview and the Level 8 chart both consume the same title, unit, and row objects. That keeps the data honest when either view changes."
+        },
+        {
+          "title": "Small data is still data",
+          "body": "Validation belongs at the edge: require labels, finite numbers, and a bounded row count so a malformed table cannot break the chart."
+        }
+      ]
+    },
+    {
+      "slug": "build-a-dashboard-card",
+      "title": "Build a dashboard card",
+      "sort": 13,
+      "track": "ui",
+      "outcome": "Compose a responsive dashboard card that makes the metric, trend, and next action easy to scan.",
+      "mental_model": [
+        "**Hierarchy creates speed.** A useful card answers what changed before it explains why.",
+        "**Responsive is a content decision.** Let the metric stay prominent while supporting details adapt to the available width.",
+        "**Actions need context.** A link or button should name the destination instead of relying on an icon alone."
+      ],
+      "lab": {
+        "kind": "component",
+        "title": "Compose a dashboard card",
+        "brief": "Turn the starter metric into a responsive card. Keep the primary number prominent, show the trend in text and color, and make the details link keyboard accessible.",
+        "checklist": [
+          "Metric has a clear label and unit",
+          "Trend is explained with text, not color alone",
+          "Card adapts below 420px",
+          "Details action has an accessible name",
+          "Focus ring is visible on the action"
+        ],
+        "starter": {
+          "html": "<main class=\"page\">\n  <article class=\"card\">\n    <p class=\"label\">Published stories</p>\n    <p class=\"metric\">128</p>\n    <p class=\"trend\">12% this month</p>\n    <a class=\"details\" href=\"#details\">View details</a>\n  </article>\n</main>",
+          "css": "body {\n  margin: 0;\n  background: #f0f4f9;\n  color: #172940;\n  font-family: Inter, system-ui, sans-serif;\n}\n\n.page {\n  min-height: 100vh;\n  display: grid;\n  place-items: center;\n  padding: 24px;\n}\n\n.card {\n  width: min(100%, 360px);\n  padding: 24px;\n  border: 1px solid #e4eaf1;\n  border-radius: 8px;\n  background: #ffffff;\n}\n\n.label,\n.metric,\n.trend {\n  margin: 0;\n}\n\n.metric {\n  font-size: 40px;\n  font-weight: 700;\n}\n\n.trend {\n  color: #16835b;\n}\n\n.details {\n  display: inline-block;\n  margin-top: 20px;\n  color: #6644ff;\n}",
+          "js": "console.log('Dashboard card mounted');"
+        },
+        "solution": {
+          "html": "<main class=\"page\">\n  <article class=\"card\" aria-labelledby=\"stories-title\">\n    <div class=\"card-head\">\n      <div>\n        <p class=\"eyebrow\">Content</p>\n        <h1 id=\"stories-title\">Published stories</h1>\n      </div>\n      <span class=\"icon\" aria-hidden=\"true\">↗</span>\n    </div>\n    <div class=\"metric-row\">\n      <p class=\"metric\">128 <span>stories</span></p>\n      <p class=\"trend\"><span aria-hidden=\"true\">↑</span> 12% <span class=\"trend-copy\">this month</span></p>\n    </div>\n    <a class=\"details\" href=\"#details\">View publishing details <span aria-hidden=\"true\">→</span></a>\n  </article>\n</main>",
+          "css": "body {\n  margin: 0;\n  background: #f0f4f9;\n  color: #172940;\n  font-family: Inter, system-ui, sans-serif;\n}\n\n.page {\n  min-height: 100vh;\n  display: grid;\n  place-items: center;\n  padding: 24px;\n}\n\n.card {\n  width: min(100%, 360px);\n  padding: 24px;\n  border: 1px solid #e4eaf1;\n  border-radius: 8px;\n  background: #ffffff;\n  box-shadow: 0 18px 40px rgba(23, 41, 64, 0.08);\n}\n\n.card-head,\n.metric-row {\n  display: flex;\n  align-items: flex-start;\n  justify-content: space-between;\n  gap: 16px;\n}\n\n.eyebrow {\n  margin: 0 0 6px;\n  color: #6644ff;\n  font-size: 11px;\n  font-weight: 700;\n  letter-spacing: 0.12em;\n  text-transform: uppercase;\n}\n\nh1,\n.metric,\n.trend {\n  margin: 0;\n}\n\nh1 {\n  font-size: 16px;\n  font-weight: 600;\n}\n\n.icon {\n  color: #8c9bb0;\n  font-size: 20px;\n}\n\n.metric-row {\n  align-items: baseline;\n  margin-top: 28px;\n}\n\n.metric {\n  font-size: 42px;\n  font-weight: 700;\n  letter-spacing: -0.04em;\n}\n\n.metric span,\n.trend-copy {\n  color: #6f8098;\n  font-size: 12px;\n  font-weight: 500;\n  letter-spacing: 0;\n}\n\n.trend {\n  color: #16835b;\n  font-size: 13px;\n  font-weight: 700;\n  text-align: right;\n}\n\n.details {\n  display: inline-flex;\n  gap: 8px;\n  margin-top: 24px;\n  color: #6644ff;\n  font-size: 13px;\n  font-weight: 600;\n  text-decoration: none;\n}\n\n.details:hover {\n  text-decoration: underline;\n}\n\n.details:focus-visible {\n  outline: 2px solid #6644ff;\n  outline-offset: 4px;\n}\n\n@media (max-width: 420px) {\n  .card {\n    padding: 20px;\n  }\n\n  .metric-row {\n    display: grid;\n    gap: 8px;\n  }\n\n  .trend {\n    text-align: left;\n  }\n}",
+          "js": "console.log('Responsive dashboard card ready');"
+        },
+        "hints": [
+          "Use a heading for the metric and keep the number visually prominent.",
+          "Pair trend color with an arrow and words such as “this month.”",
+          "Test the preview at a narrow width, not just at desktop size."
+        ],
+        "device": "desktop"
+      },
+      "takeaway": "A dashboard card is successful when someone can scan the metric, its meaning, and the next action in one pass.",
+      "knowledge_check": {
+        "question": "What makes a positive trend accessible?",
+        "options": [
+          "Green text only",
+          "A decorative arrow only",
+          "Text and a visual treatment that reinforce each other",
+          "A larger number"
+        ],
+        "answer": 2,
+        "explanation": "Color and icons can be missed or misunderstood. The trend should also be stated in words so its meaning is available to everyone."
+      },
+      "deep_dive": [
+        {
+          "title": "Scan order",
+          "body": "Lead with the label and number, then provide the trend and details. Avoid making a decorative chart compete with the metric."
+        },
+        {
+          "title": "Responsive composition",
+          "body": "A card can change from two columns to a vertical stack without changing the information hierarchy."
+        },
+        {
+          "title": "Action labels",
+          "body": "“View publishing details” is more useful to screen readers and keyboard users than an unlabeled arrow icon."
+        }
+      ]
+    },
+    {
+      "slug": "build-an-accessible-dialog",
+      "title": "Build an accessible dialog",
+      "sort": 14,
+      "track": "ui",
+      "outcome": "Create a dialog that has a clear escape route, a labelled title, and predictable keyboard behavior.",
+      "mental_model": [
+        "**A dialog interrupts the page.** Explain why it opened and offer a clear way to leave.",
+        "**Focus must have a home.** Move focus into the dialog and return it to the trigger when the dialog closes.",
+        "**Danger deserves friction.** Destructive actions should be explicit and visually distinct from cancel."
+      ],
+      "lab": {
+        "kind": "component",
+        "title": "Design a delete confirmation",
+        "brief": "Complete the delete confirmation dialog. Make the trigger open it, support Escape and the cancel action, and announce the dialog title and destructive action clearly.",
+        "checklist": [
+          "Dialog has an accessible label",
+          "Trigger opens the dialog",
+          "Cancel and Escape close it",
+          "Destructive action is visually distinct",
+          "Focus returns to the trigger"
+        ],
+        "starter": {
+          "html": "<main class=\"page\">\n  <button id=\"open\" type=\"button\">Delete draft</button>\n  <div id=\"dialog\" class=\"backdrop\" hidden>\n    <section class=\"dialog\">\n      <h1>Delete this draft?</h1>\n      <p>This action cannot be undone.</p>\n      <button id=\"cancel\" type=\"button\">Cancel</button>\n      <button id=\"confirm\" type=\"button\">Delete</button>\n    </section>\n  </div>\n</main>",
+          "css": "body {\n  margin: 0;\n  background: #f0f4f9;\n  color: #172940;\n  font-family: Inter, system-ui, sans-serif;\n}\n\n.page {\n  min-height: 100vh;\n  display: grid;\n  place-items: center;\n}\n\nbutton {\n  min-height: 44px;\n  padding: 0 16px;\n  border: 1px solid #d3dae4;\n  border-radius: 6px;\n  background: #ffffff;\n  font: inherit;\n  cursor: pointer;\n}\n\n.backdrop {\n  position: fixed;\n  inset: 0;\n  display: grid;\n  place-items: center;\n  background: rgba(23, 41, 64, 0.45);\n}\n\n.dialog {\n  width: min(100% - 32px, 420px);\n  padding: 24px;\n  border-radius: 8px;\n  background: #ffffff;\n}",
+          "js": "const open = document.getElementById('open');\nconst dialog = document.getElementById('dialog');\nconst cancel = document.getElementById('cancel');\n\nopen.addEventListener('click', () => {\n  dialog.hidden = false;\n});\n\ncancel.addEventListener('click', () => {\n  dialog.hidden = true;\n});"
+        },
+        "solution": {
+          "html": "<main class=\"page\">\n  <button id=\"open\" type=\"button\" aria-haspopup=\"dialog\">Delete draft</button>\n  <div id=\"dialog\" class=\"backdrop\" hidden>\n    <section class=\"dialog\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"dialog-title\" aria-describedby=\"dialog-description\">\n      <h1 id=\"dialog-title\">Delete this draft?</h1>\n      <p id=\"dialog-description\">This action cannot be undone. The draft will be removed permanently.</p>\n      <div class=\"actions\">\n        <button id=\"cancel\" type=\"button\">Cancel</button>\n        <button id=\"confirm\" class=\"danger\" type=\"button\">Delete draft</button>\n      </div>\n    </section>\n  </div>\n</main>",
+          "css": "body {\n  margin: 0;\n  background: #f0f4f9;\n  color: #172940;\n  font-family: Inter, system-ui, sans-serif;\n}\n\n.page {\n  min-height: 100vh;\n  display: grid;\n  place-items: center;\n}\n\nbutton {\n  min-height: 44px;\n  padding: 0 16px;\n  border: 1px solid #d3dae4;\n  border-radius: 6px;\n  background: #ffffff;\n  font: inherit;\n  cursor: pointer;\n}\n\nbutton:focus-visible {\n  outline: 2px solid #6644ff;\n  outline-offset: 3px;\n}\n\n.backdrop {\n  position: fixed;\n  inset: 0;\n  display: grid;\n  place-items: center;\n  padding: 16px;\n  background: rgba(23, 41, 64, 0.45);\n}\n\n.dialog {\n  width: min(100%, 420px);\n  padding: 28px;\n  border: 1px solid #e4eaf1;\n  border-radius: 8px;\n  background: #ffffff;\n  box-shadow: 0 24px 60px rgba(23, 41, 64, 0.2);\n}\n\n.dialog h1 {\n  margin: 0;\n  color: #172940;\n  font-size: 20px;\n}\n\n.dialog p {\n  margin: 8px 0 24px;\n  color: #6f8098;\n  line-height: 1.5;\n}\n\n.actions {\n  display: flex;\n  justify-content: flex-end;\n  gap: 10px;\n  flex-wrap: wrap;\n}\n\n.danger {\n  border-color: #c53737;\n  background: #c53737;\n  color: #ffffff;\n  font-weight: 600;\n}",
+          "js": "const open = document.getElementById('open');\nconst dialog = document.getElementById('dialog');\nconst cancel = document.getElementById('cancel');\nconst confirm = document.getElementById('confirm');\nlet restoreFocus = open;\n\nfunction closeDialog() {\n  dialog.hidden = true;\n  restoreFocus.focus();\n}\n\nopen.addEventListener('click', () => {\n  restoreFocus = document.activeElement;\n  dialog.hidden = false;\n  cancel.focus();\n});\n\ncancel.addEventListener('click', closeDialog);\ndialog.addEventListener('keydown', (event) => {\n  if (event.key === 'Escape') closeDialog();\n});\n\nconfirm.addEventListener('click', () => {\n  closeDialog();\n  open.textContent = 'Draft deleted';\n  open.disabled = true;\n});"
+        },
+        "hints": [
+          "Use role=dialog, aria-modal, and labelledby/describedby together.",
+          "Store the trigger before opening so focus can return there.",
+          "Escape should close the dialog without confirming the destructive action."
+        ],
+        "device": "desktop"
+      },
+      "takeaway": "A dialog is an interaction contract: label it, contain the interruption, and always provide a safe way back.",
+      "knowledge_check": {
+        "question": "Where should focus go after a dialog closes?",
+        "options": [
+          "The top of the page",
+          "The element that opened the dialog",
+          "The browser address bar",
+          "The first heading in the page"
+        ],
+        "answer": 1,
+        "explanation": "Returning focus to the trigger preserves the user's place and prevents keyboard users from losing context."
+      },
+      "deep_dive": [
+        {
+          "title": "Dialog semantics",
+          "body": "A labelled dialog gives assistive technology a useful announcement. aria-describedby adds the consequence or supporting context."
+        },
+        {
+          "title": "Focus containment",
+          "body": "A production dialog should keep Tab inside the modal while it is open. The lab starts with Escape and focus restoration as the essential foundation."
+        },
+        {
+          "title": "Destructive actions",
+          "body": "Use a specific action label such as “Delete draft,” not a vague “OK,” so the consequence is clear before activation."
+        }
+      ]
+    },
+    {
+      "slug": "design-loading-and-empty-states",
+      "title": "Design loading and empty states",
+      "sort": 15,
+      "track": "ui",
+      "outcome": "Turn waiting and no-results moments into useful UI with honest status, next steps, and accessible announcements.",
+      "mental_model": [
+        "**Empty is not broken.** Explain why there is no content and what the user can do next.",
+        "**Loading sets expectations.** Show progress without pretending data has arrived.",
+        "**Status needs a channel.** Use text and live-region semantics so updates are available beyond sight."
+      ],
+      "lab": {
+        "kind": "component",
+        "title": "Complete the collection states",
+        "brief": "Design a collection panel that can explain loading and no results. Add an accessible status message and a useful next action without relying on a spinner alone.",
+        "checklist": [
+          "Loading state has explanatory text",
+          "Empty state explains the next step",
+          "Status is announced politely",
+          "Action is keyboard accessible",
+          "No state relies on color alone"
+        ],
+        "starter": {
+          "html": "<main class=\"page\">\n  <section class=\"panel\" aria-labelledby=\"title\">\n    <header class=\"panel-head\">\n      <div>\n        <p class=\"eyebrow\">Collection</p>\n        <h1 id=\"title\">Articles</h1>\n      </div>\n      <button id=\"refresh\" type=\"button\">Refresh</button>\n    </header>\n    <div id=\"state\" class=\"state\">\n      <span class=\"spinner\" aria-hidden=\"true\"></span>\n      <p>Loading articles...</p>\n    </div>\n  </section>\n</main>",
+          "css": "body {\n  margin: 0;\n  background: #f0f4f9;\n  color: #172940;\n  font-family: Inter, system-ui, sans-serif;\n}\n\n.page {\n  min-height: 100vh;\n  display: grid;\n  place-items: center;\n  padding: 24px;\n}\n\n.panel {\n  width: min(100%, 520px);\n  padding: 24px;\n  border: 1px solid #e4eaf1;\n  border-radius: 8px;\n  background: #ffffff;\n}\n\n.panel-head {\n  display: flex;\n  justify-content: space-between;\n  gap: 16px;\n}\n\n.eyebrow {\n  margin: 0 0 6px;\n  color: #6644ff;\n  font-size: 11px;\n  font-weight: 700;\n  text-transform: uppercase;\n}\n\nh1 {\n  margin: 0;\n  font-size: 20px;\n}\n\nbutton {\n  min-height: 44px;\n  padding: 0 14px;\n  border: 1px solid #d3dae4;\n  border-radius: 6px;\n  background: #ffffff;\n  font: inherit;\n}\n\n.state {\n  min-height: 180px;\n  display: grid;\n  place-items: center;\n  align-content: center;\n  gap: 12px;\n  color: #6f8098;\n  text-align: center;\n}\n\n.state p {\n  margin: 0;\n}\n\n.spinner {\n  width: 24px;\n  height: 24px;\n  border: 3px solid #d3dae4;\n  border-top-color: #6644ff;\n  border-radius: 50%;\n  animation: spin 700ms linear infinite;\n}\n\n@keyframes spin {\n  to { transform: rotate(360deg); }\n}",
+          "js": "const state = document.getElementById('state');\nconst refresh = document.getElementById('refresh');\n\nrefresh.addEventListener('click', () => {\n  state.innerHTML = '<p>No articles yet. Create your first article to get started.</p><button type=\"button\">Create article</button>';\n});"
+        },
+        "solution": {
+          "html": "<main class=\"page\">\n  <section class=\"panel\" aria-labelledby=\"title\">\n    <header class=\"panel-head\">\n      <div>\n        <p class=\"eyebrow\">Collection</p>\n        <h1 id=\"title\">Articles</h1>\n      </div>\n      <button id=\"refresh\" type=\"button\">Refresh</button>\n    </header>\n    <div id=\"state\" class=\"state\" role=\"status\" aria-live=\"polite\" aria-atomic=\"true\">\n      <div class=\"empty-icon\" aria-hidden=\"true\">✦</div>\n      <h2>No articles yet</h2>\n      <p>Start your collection by creating the first article.</p>\n      <button id=\"create\" class=\"primary\" type=\"button\">Create article</button>\n    </div>\n  </section>\n</main>",
+          "css": "body {\n  margin: 0;\n  background: #f0f4f9;\n  color: #172940;\n  font-family: Inter, system-ui, sans-serif;\n}\n\n.page {\n  min-height: 100vh;\n  display: grid;\n  place-items: center;\n  padding: 24px;\n}\n\n.panel {\n  width: min(100%, 520px);\n  padding: 24px;\n  border: 1px solid #e4eaf1;\n  border-radius: 8px;\n  background: #ffffff;\n  box-shadow: 0 18px 40px rgba(23, 41, 64, 0.08);\n}\n\n.panel-head {\n  display: flex;\n  justify-content: space-between;\n  gap: 16px;\n}\n\n.eyebrow {\n  margin: 0 0 6px;\n  color: #6644ff;\n  font-size: 11px;\n  font-weight: 700;\n  letter-spacing: 0.12em;\n  text-transform: uppercase;\n}\n\nh1,\nh2,\n.state p {\n  margin: 0;\n}\n\nh1 {\n  font-size: 20px;\n}\n\nh2 {\n  font-size: 17px;\n}\n\nbutton {\n  min-height: 44px;\n  padding: 0 14px;\n  border: 1px solid #d3dae4;\n  border-radius: 6px;\n  background: #ffffff;\n  color: #172940;\n  font: inherit;\n  cursor: pointer;\n}\n\nbutton:focus-visible {\n  outline: 2px solid #6644ff;\n  outline-offset: 3px;\n}\n\n.state {\n  min-height: 220px;\n  display: grid;\n  place-items: center;\n  align-content: center;\n  gap: 10px;\n  color: #6f8098;\n  text-align: center;\n}\n\n.state h2 {\n  color: #172940;\n}\n\n.state p {\n  max-width: 280px;\n  line-height: 1.5;\n}\n\n.empty-icon {\n  display: grid;\n  width: 44px;\n  height: 44px;\n  place-items: center;\n  margin-bottom: 4px;\n  border-radius: 50%;\n  background: #f0edff;\n  color: #6644ff;\n  font-size: 22px;\n}\n\n.primary {\n  margin-top: 8px;\n  border-color: #6644ff;\n  background: #6644ff;\n  color: #ffffff;\n  font-weight: 600;\n}",
+          "js": "const state = document.getElementById('state');\nconst refresh = document.getElementById('refresh');\n\nrefresh.addEventListener('click', () => {\n  state.innerHTML = '<p>Loading articles...</p>';\n  window.setTimeout(() => {\n    state.innerHTML = '<div class=\"empty-icon\" aria-hidden=\"true\">✦</div><h2>No articles yet</h2><p>Start your collection by creating the first article.</p><button id=\"create\" class=\"primary\" type=\"button\">Create article</button>';\n    state.querySelector('#create').focus();\n  }, 400);\n});\n\nstate.addEventListener('click', (event) => {\n  if (event.target.id === 'create') {\n    state.querySelector('p').textContent = 'The article editor would open here.';\n  }\n});"
+        },
+        "hints": [
+          "A loading message explains what is happening; a spinner alone does not.",
+          "Use role=status with aria-live=polite for non-urgent updates.",
+          "Keep the empty-state action specific to the next useful step."
+        ],
+        "device": "desktop"
+      },
+      "takeaway": "Loading and empty states are part of the product experience: they reduce uncertainty and give the user a clear next move.",
+      "knowledge_check": {
+        "question": "What should an empty state include?",
+        "options": [
+          "Only a blank panel",
+          "An explanation and a useful next action",
+          "A spinner forever",
+          "A red error message every time"
+        ],
+        "answer": 1,
+        "explanation": "An empty state should explain the situation and help the user recover or make progress."
+      },
+      "deep_dive": [
+        {
+          "title": "Loading versus error",
+          "body": "Loading means the request is still in progress. Error means the request failed. Do not use the same message for both states."
+        },
+        {
+          "title": "Live regions",
+          "body": "role=status and aria-live=polite let assistive technology announce a changing status without interrupting the user's current task."
+        },
+        {
+          "title": "Useful emptiness",
+          "body": "The best empty state is specific to the collection. “Create article” is more actionable than “Nothing here.”"
+        }
+      ]
+    },
+    {
+      "slug": "build-responsive-bar-chart",
+      "title": "Build a responsive bar chart",
+      "sort": 16,
+      "track": "ui",
+      "outcome": "Design a responsive Directus bar chart that lets readers compare editorial activity while keeping labels and values easy to scan.",
+      "mental_model": [
+        "**Compare before decorating.** A bar earns its space by making category differences immediate.",
+        "**The row is the contract.** Labels, values, and units stay editable so the chart is never disconnected from CMS content.",
+        "**Responsive is a reading order.** Keep labels, values, and the strongest comparison available as the card narrows."
+      ],
+      "lab": {
+        "kind": "chart",
+        "chartType": "bar",
+        "title": "Compare editorial activity",
+        "brief": "Enter category values from your Directus workflow and tune the card styling. The bars resize with the container and update as you edit each number.",
+        "checklist": [
+          "Categories have short, meaningful labels",
+          "Bar lengths reflect the edited values",
+          "The highest value is still readable on mobile",
+          "The unit is visible beside the chart",
+          "The customized chart data is saved in Directus"
+        ],
+        "starter": {
+          "content": {
+            "title": "Stories by channel",
+            "caption": "Compare where this week’s published stories came from.",
+            "unit": "stories",
+            "rows": [
+              {
+                "label": "Organic",
+                "value": 42
+              },
+              {
+                "label": "Newsletter",
+                "value": 28
+              },
+              {
+                "label": "Partners",
+                "value": 35
+              },
+              {
+                "label": "Direct",
+                "value": 19
+              },
+              {
+                "label": "Search",
+                "value": 51
+              },
+              {
+                "label": "Social",
+                "value": 24
+              }
+            ]
+          },
+          "tokens": {
+            "accent": "#6644ff",
+            "radius": 14,
+            "spacing": 24
+          }
+        },
+        "hints": [
+          "Keep category labels short so each bar has room on narrow screens.",
+          "Change one category at a time and check whether the ranking still tells the intended story.",
+          "Use a consistent unit so the bar lengths are not misread."
+        ],
+        "device": "responsive"
+      },
+      "takeaway": "A bar chart is strongest when Directus categories are comparable, ordered intentionally, and still legible when the layout narrows.",
+      "knowledge_check": {
+        "question": "Which change should immediately alter a bar chart?",
+        "options": [
+          "Editing a saved row value",
+          "Changing only the browser title",
+          "Adding a CSS comment",
+          "Refreshing without changing data"
+        ],
+        "answer": 0,
+        "explanation": "The bars are derived from the structured row values, so changing a value changes its bar length."
+      },
+      "deep_dive": [
+        {
+          "title": "Comparison first",
+          "body": "Bars support side-by-side comparison when categories share a unit. Sort or order them intentionally instead of letting the visual order happen by accident."
+        },
+        {
+          "title": "Mobile hierarchy",
+          "body": "On a narrow screen, preserve the title, unit, and relative bar lengths. Short labels and a bounded row count prevent the chart from becoming a horizontal scroll problem."
+        },
+        {
+          "title": "CMS contract",
+          "body": "The chart consumes structured rows rather than rendered markup, so the same saved CMS values can support another visual treatment later."
+        }
+      ]
+    },
+    {
+      "slug": "build-responsive-line-chart",
+      "title": "Build a responsive line chart",
+      "sort": 17,
+      "track": "ui",
+      "outcome": "Create a responsive Directus line chart that explains change over time instead of treating a sequence of values as unrelated cards.",
+      "mental_model": [
+        "**Sequence creates meaning.** A line connects ordered observations, so the labels must describe a real progression.",
+        "**Points need context.** The line shows shape, while endpoint values and units keep the insight precise.",
+        "**Responsive is not smaller desktop.** The chart can resize while the summary and labels preserve the message."
+      ],
+      "lab": {
+        "kind": "chart",
+        "chartType": "line",
+        "title": "Trace a publishing trend",
+        "brief": "Shape a time-ordered Directus series, choose a clear accent, and test how the line and points behave when values and labels change.",
+        "checklist": [
+          "Labels follow a meaningful time order",
+          "The line makes direction easy to see",
+          "Points remain visible at narrow widths",
+          "The first and latest values are summarized",
+          "The customized trend data is saved in Directus"
+        ],
+        "starter": {
+          "content": {
+            "title": "Daily publishing pace",
+            "caption": "A seven-day sequence for spotting momentum and dips.",
+            "unit": "stories",
+            "rows": [
+              {
+                "label": "Mon",
+                "value": 12
+              },
+              {
+                "label": "Tue",
+                "value": 16
+              },
+              {
+                "label": "Wed",
+                "value": 14
+              },
+              {
+                "label": "Thu",
+                "value": 22
+              },
+              {
+                "label": "Fri",
+                "value": 25
+              },
+              {
+                "label": "Sat",
+                "value": 18
+              },
+              {
+                "label": "Sun",
+                "value": 27
+              }
+            ]
+          },
+          "tokens": {
+            "accent": "#0f766e",
+            "radius": 14,
+            "spacing": 24
+          }
+        },
+        "hints": [
+          "Keep rows in chronological order so the line has a truthful direction.",
+          "Test a sharp dip and a recovery to see whether the story remains understandable.",
+          "Use the endpoint summary as a text alternative to visual inspection."
+        ],
+        "device": "responsive"
+      },
+      "takeaway": "A line chart gives Directus time-series data a reading order: the sequence and endpoint context matter as much as the styling.",
+      "knowledge_check": {
+        "question": "What makes a line chart meaningful?",
+        "options": [
+          "An ordered sequence with a clear unit",
+          "Randomly rearranged categories",
+          "Removing all labels",
+          "Using color without values"
+        ],
+        "answer": 0,
+        "explanation": "A line implies continuity, so its rows need an intentional order and a clear measurement."
+      },
+      "deep_dive": [
+        {
+          "title": "Ordered observations",
+          "body": "A line suggests continuity. Use it for a meaningful sequence and avoid implying a trend when the categories have no natural order."
+        },
+        {
+          "title": "Accessible summary",
+          "body": "Keep endpoint values and units in text so the insight survives without pointer hover, fine-grained SVG inspection, or color perception."
+        },
+        {
+          "title": "Responsive points",
+          "body": "A responsive chart changes its available width, not the underlying data. The normalized rows remain the source of truth."
+        }
+      ]
+    }
+  ]
+}
