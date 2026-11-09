@@ -1,0 +1,311 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1100" width="1400" height="1100" style="background:#ffffff;font-family:Arial,Helvetica,sans-serif;">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#555"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1400" height="1100" fill="#ffffff"/>
+
+  <!-- Title -->
+  <text x="700" y="30" text-anchor="middle" font-size="22" font-weight="bold" fill="#1a1a1a">PostgreSQL Database ERD — Agricultural Marketplace</text>
+  <text x="700" y="52" text-anchor="middle" font-size="13" fill="#666">Schema: public | Reference: auth.users (external)</text>
+
+  <!-- ==================== auth.users (external) ==================== -->
+  <rect x="580" y="70" width="240" height="50" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="700" y="92" text-anchor="middle" font-size="13" font-weight="bold" fill="#92400e">auth.users</text>
+  <text x="700" y="108" text-anchor="middle" font-size="11" fill="#92400e">(external Supabase auth table)</text>
+
+  <!-- ==================== TABLES ==================== -->
+
+  <!-- profiles -->
+  <rect x="40" y="160" width="280" height="280" rx="6" fill="#f0f9ff" stroke="#0369a1" stroke-width="1.5"/>
+  <rect x="40" y="160" width="280" height="28" rx="6" fill="#0369a1"/>
+  <rect x="40" y="178" width="280" height="10" fill="#0369a1"/>
+  <text x="180" y="179" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">profiles</text>
+  <text x="52" y="205" font-size="11" fill="#1e293b">🔑 id (uuid) PK</text>
+  <text x="52" y="223" font-size="11" fill="#1e293b">full_name (text)</text>
+  <text x="52" y="241" font-size="11" fill="#1e293b">phone (text)</text>
+  <text x="52" y="259" font-size="11" fill="#1e293b">avatar_path (text)</text>
+  <text x="52" y="277" font-size="11" fill="#1e293b">rating_avg (numeric(2,1))</text>
+  <text x="52" y="295" font-size="11" fill="#1e293b">rating_count (int)</text>
+  <text x="52" y="313" font-size="11" fill="#1e293b">created_at (timestamptz)</text>
+  <text x="52" y="331" font-size="11" fill="#1e293b">updated_at (timestamptz)</text>
+  <text x="52" y="349" font-size="11" fill="#1e293b">deleted_at (timestamptz)</text>
+  <text x="52" y="367" font-size="11" fill="#1e293b">barangay / municipality / province</text>
+  <text x="52" y="385" font-size="11" fill="#1e293b">farm_size_hectares (numeric)</text>
+  <text x="52" y="403" font-size="11" fill="#1e293b">years_farming_experience (smallint)</text>
+  <text x="52" y="421" font-size="11" fill="#1e293b">rice_varieties (text[])</text>
+  <text x="52" y="439" font-size="11" fill="#1e293b">rsbsa_number / verification_status</text>
+
+  <!-- listings -->
+  <rect x="380" y="160" width="280" height="320" rx="6" fill="#f0fdf4" stroke="#15803d" stroke-width="1.5"/>
+  <rect x="380" y="160" width="280" height="28" rx="6" fill="#15803d"/>
+  <rect x="380" y="178" width="280" height="10" fill="#15803d"/>
+  <text x="520" y="179" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">listings</text>
+  <text x="392" y="205" font-size="11" fill="#1e293b">🔑 id (uuid) PK</text>
+  <text x="392" y="223" font-size="11" fill="#1e293b">🔗 user_id (uuid) FK→auth.users</text>
+  <text x="392" y="241" font-size="11" fill="#1e293b">title (text)</text>
+  <text x="392" y="259" font-size="11" fill="#1e293b">description (text)</text>
+  <text x="392" y="277" font-size="11" fill="#1e293b">price (numeric(12,2))</text>
+  <text x="392" y="295" font-size="11" fill="#1e293b">unit (text) CHECK kg/sack/cavan/lot</text>
+  <text x="392" y="313" font-size="11" fill="#1e293b">category (text) CHECK</text>
+  <text x="392" y="331" font-size="11" fill="#1e293b">quantity (numeric(12,2))</text>
+  <text x="392" y="349" font-size="11" fill="#1e293b">lat / lng (double)</text>
+  <text x="392" y="367" font-size="11" fill="#1e293b">location_label / seller_name</text>
+  <text x="392" y="385" font-size="11" fill="#1e293b">status (text) CHECK</text>
+  <text x="392" y="403" font-size="11" fill="#1e293b">reserved_for (uuid) FK→auth.users</text>
+  <text x="392" y="421" font-size="11" fill="#1e293b">sold_to (uuid) FK→auth.users</text>
+  <text x="392" y="439" font-size="11" fill="#1e293b">reserved_for_name / sold_to_name</text>
+  <text x="392" y="457" font-size="11" fill="#1e293b">created_at / sold_at / reserved_at</text>
+
+  <!-- listing_images -->
+  <rect x="720" y="160" width="240" height="140" rx="6" fill="#fdf4ff" stroke="#a21caf" stroke-width="1.5"/>
+  <rect x="720" y="160" width="240" height="28" rx="6" fill="#a21caf"/>
+  <rect x="720" y="178" width="240" height="10" fill="#a21caf"/>
+  <text x="840" y="179" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">listing_images</text>
+  <text x="732" y="205" font-size="11" fill="#1e293b">🔑 id (uuid) PK</text>
+  <text x="732" y="223" font-size="11" fill="#1e293b">🔗 listing_id (uuid) FK→listings</text>
+  <text x="732" y="241" font-size="11" fill="#1e293b">storage_path (text)</text>
+  <text x="732" y="259" font-size="11" fill="#1e293b">position (smallint)</text>
+  <text x="732" y="277" font-size="11" fill="#1e293b">created_at (timestamptz)</text>
+
+  <!-- forum_posts -->
+  <rect x="40" y="500" width="280" height="220" rx="6" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
+  <rect x="40" y="500" width="280" height="28" rx="6" fill="#c2410c"/>
+  <rect x="40" y="518" width="280" height="10" fill="#c2410c"/>
+  <text x="180" y="519" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">forum_posts</text>
+  <text x="52" y="545" font-size="11" fill="#1e293b">🔑 id (uuid) PK</text>
+  <text x="52" y="563" font-size="11" fill="#1e293b">🔗 user_id (uuid) FK→auth.users</text>
+  <text x="52" y="581" font-size="11" fill="#1e293b">author_name (text)</text>
+  <text x="52" y="599" font-size="11" fill="#1e293b">title (text)</text>
+  <text x="52" y="617" font-size="11" fill="#1e293b">body (text)</text>
+  <text x="52" y="635" font-size="11" fill="#1e293b">heart_count / comment_count (int)</text>
+  <text x="52" y="653" font-size="11" fill="#1e293b">category (text) CHECK</text>
+  <text x="52" y="671" font-size="11" fill="#1e293b">created_at / updated_at / deleted_at</text>
+
+  <!-- forum_comments -->
+  <rect x="380" y="500" width="280" height="180" rx="6" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+  <rect x="380" y="500" width="280" height="28" rx="6" fill="#b91c1c"/>
+  <rect x="380" y="518" width="280" height="10" fill="#b91c1c"/>
+  <text x="520" y="519" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">forum_comments</text>
+  <text x="392" y="545" font-size="11" fill="#1e293b">🔑 id (uuid) PK</text>
+  <text x="392" y="563" font-size="11" fill="#1e293b">🔗 post_id (uuid) FK→forum_posts</text>
+  <text x="392" y="581" font-size="11" fill="#1e293b">🔗 user_id (uuid) FK→auth.users</text>
+  <text x="392" y="599" font-size="11" fill="#1e293b">author_name (text)</text>
+  <text x="392" y="617" font-size="11" fill="#1e293b">body (text)</text>
+  <text x="392" y="635" font-size="11" fill="#1e293b">heart_count (int)</text>
+  <text x="392" y="653" font-size="11" fill="#1e293b">created_at / updated_at / deleted_at</text>
+
+  <!-- forum_reactions -->
+  <rect x="720" y="500" width="260" height="160" rx="6" fill="#fefce8" stroke="#a16207" stroke-width="1.5"/>
+  <rect x="720" y="500" width="260" height="28" rx="6" fill="#a16207"/>
+  <rect x="720" y="518" width="260" height="10" fill="#a16207"/>
+  <text x="850" y="519" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">forum_reactions</text>
+  <text x="732" y="545" font-size="11" fill="#1e293b">🔑 id (uuid) PK</text>
+  <text x="732" y="563" font-size="11" fill="#1e293b">🔗 user_id (uuid) FK→auth.users</text>
+  <text x="732" y="581" font-size="11" fill="#1e293b">🔗 post_id (uuid) FK→forum_posts</text>
+  <text x="732" y="599" font-size="11" fill="#1e293b">🔗 comment_id (uuid) FK→forum_comments</text>
+  <text x="732" y="617" font-size="11" fill="#1e293b">created_at (timestamptz)</text>
+  <text x="732" y="637" font-size="10" fill="#92400e">CHECK: exactly one of post_id/comment_id</text>
+
+  <!-- forum_images -->
+  <rect x="1020" y="500" width="240" height="140" rx="6" fill="#f5f3ff" stroke="#6d28d9" stroke-width="1.5"/>
+  <rect x="1020" y="500" width="240" height="28" rx="6" fill="#6d28d9"/>
+  <rect x="1020" y="518" width="240" height="10" fill="#6d28d9"/>
+  <text x="1140" y="519" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">forum_images</text>
+  <text x="1032" y="545" font-size="11" fill="#1e293b">🔑 id (uuid) PK</text>
+  <text x="1032" y="563" font-size="11" fill="#1e293b">🔗 post_id (uuid) FK→forum_posts</text>
+  <text x="1032" y="581" font-size="11" fill="#1e293b">storage_path (text)</text>
+  <text x="1032" y="599" font-size="11" fill="#1e293b">position (smallint)</text>
+  <text x="1032" y="617" font-size="11" fill="#1e293b">created_at (timestamptz)</text>
+
+  <!-- conversations -->
+  <rect x="40" y="780" width="300" height="240" rx="6" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.5"/>
+  <rect x="40" y="780" width="300" height="28" rx="6" fill="#1d4ed8"/>
+  <rect x="40" y="798" width="300" height="10" fill="#1d4ed8"/>
+  <text x="190" y="799" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">conversations</text>
+  <text x="52" y="825" font-size="11" fill="#1e293b">🔑 id (uuid) PK</text>
+  <text x="52" y="843" font-size="11" fill="#1e293b">🔗 listing_id (uuid) FK→listings</text>
+  <text x="52" y="861" font-size="11" fill="#1e293b">🔗 buyer_id (uuid) FK→auth.users</text>
+  <text x="52" y="879" font-size="11" fill="#1e293b">🔗 seller_id (uuid) FK→auth.users</text>
+  <text x="52" y="897" font-size="11" fill="#1e293b">listing_title (text)</text>
+  <text x="52" y="915" font-size="11" fill="#1e293b">buyer_name / seller_name (text)</text>
+  <text x="52" y="933" font-size="11" fill="#1e293b">last_message_at (timestamptz)</text>
+  <text x="52" y="951" font-size="11" fill="#1e293b">last_message_preview (text)</text>
+  <text x="52" y="969" font-size="11" fill="#1e293b">buyer_last_read_at / seller_last_read_at</text>
+  <text x="52" y="987" font-size="11" fill="#1e293b">created_at / updated_at</text>
+  <text x="52" y="1007" font-size="10" fill="#1e40af">CHECK: buyer_id &lt;&gt; seller_id</text>
+
+  <!-- messages -->
+  <rect x="400" y="780" width="260" height="140" rx="6" fill="#f0fdfa" stroke="#0f766e" stroke-width="1.5"/>
+  <rect x="400" y="780" width="260" height="28" rx="6" fill="#0f766e"/>
+  <rect x="400" y="798" width="260" height="10" fill="#0f766e"/>
+  <text x="530" y="799" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">messages</text>
+  <text x="412" y="825" font-size="11" fill="#1e293b">🔑 id (uuid) PK</text>
+  <text x="412" y="843" font-size="11" fill="#1e293b">🔗 conversation_id (uuid) FK→conversations</text>
+  <text x="412" y="861" font-size="11" fill="#1e293b">🔗 sender_id (uuid) FK→auth.users</text>
+  <text x="412" y="879" font-size="11" fill="#1e293b">body (text)</text>
+  <text x="412" y="897" font-size="11" fill="#1e293b">created_at (timestamptz)</text>
+
+  <!-- transactions -->
+  <rect x="720" y="780" width="280" height="220" rx="6" fill="#fef2f2" stroke="#991b1b" stroke-width="1.5"/>
+  <rect x="720" y="780" width="280" height="28" rx="6" fill="#991b1b"/>
+  <rect x="720" y="798" width="280" height="10" fill="#991b1b"/>
+  <text x="860" y="799" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">transactions</text>
+  <text x="732" y="825" font-size="11" fill="#1e293b">🔑 id (uuid) PK</text>
+  <text x="732" y="843" font-size="11" fill="#1e293b">🔗 listing_id (uuid) FK→listings</text>
+  <text x="732" y="861" font-size="11" fill="#1e293b">listing_title (text)</text>
+  <text x="732" y="879" font-size="11" fill="#1e293b">price (numeric(12,2))</text>
+  <text x="732" y="897" font-size="11" fill="#1e293b">unit (text) CHECK</text>
+  <text x="732" y="915" font-size="11" fill="#1e293b">🔗 seller_id (uuid) FK→auth.users</text>
+  <text x="732" y="933" font-size="11" fill="#1e293b">seller_name (text)</text>
+  <text x="732" y="951" font-size="11" fill="#1e293b">🔗 buyer_id (uuid) FK→auth.users</text>
+  <text x="732" y="969" font-size="11" fill="#1e293b">buyer_name (text)</text>
+  <text x="732" y="987" font-size="11" fill="#1e293b">status (text) CHECK</text>
+  <text x="732" y="1005" font-size="11" fill="#1e293b">reserved_at / sold_at / created_at</text>
+
+  <!-- reviews -->
+  <rect x="1040" y="780" width="280" height="240" rx="6" fill="#fdf2f8" stroke="#be185d" stroke-width="1.5"/>
+  <rect x="1040" y="780" width="280" height="28" rx="6" fill="#be185d"/>
+  <rect x="1040" y="798" width="280" height="10" fill="#be185d"/>
+  <text x="1180" y="799" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">reviews</text>
+  <text x="1052" y="825" font-size="11" fill="#1e293b">🔑 id (uuid) PK</text>
+  <text x="1052" y="843" font-size="11" fill="#1e293b">🔗 transaction_id (uuid) FK→transactions</text>
+  <text x="1052" y="861" font-size="11" fill="#1e293b">listing_title (text)</text>
+  <text x="1052" y="879" font-size="11" fill="#1e293b">🔗 reviewer_id (uuid) FK→auth.users</text>
+  <text x="1052" y="897" font-size="11" fill="#1e293b">reviewer_name (text)</text>
+  <text x="1052" y="915" font-size="11" fill="#1e293b">reviewer_role (text) CHECK</text>
+  <text x="1052" y="933" font-size="11" fill="#1e293b">🔗 reviewee_id (uuid) FK→auth.users</text>
+  <text x="1052" y="951" font-size="11" fill="#1e293b">reviewee_name (text)</text>
+  <text x="1052" y="969" font-size="11" fill="#1e293b">rating (smallint) CHECK 1-5</text>
+  <text x="1052" y="987" font-size="11" fill="#1e293b">comment (text)</text>
+  <text x="1052" y="1005" font-size="11" fill="#1e293b">created_at (timestamptz)</text>
+  <text x="1052" y="1023" font-size="10" fill="#9d174d">UNIQUE(transaction_id, reviewer_id)</text>
+
+  <!-- ==================== PROFILE TABLES ==================== -->
+
+  <!-- profile_credentials -->
+  <rect x="40" y="1080" width="280" height="180" rx="6" fill="#f8fafc" stroke="#475569" stroke-width="1.5"/>
+  <rect x="40" y="1080" width="280" height="28" rx="6" fill="#475569"/>
+  <rect x="40" y="1098" width="280" height="10" fill="#475569"/>
+  <text x="180" y="1099" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">profile_credentials</text>
+  <text x="52" y="1125" font-size="11" fill="#1e293b">🔑 id (uuid) PK</text>
+  <text x="52" y="1143" font-size="11" fill="#1e293b">🔗 user_id (uuid) FK→auth.users</text>
+  <text x="52" y="1161" font-size="11" fill="#1e293b">credential_type (text) CHECK</text>
+  <text x="52" y="1179" font-size="11" fill="#1e293b">issuing_organization (text)</text>
+  <text x="52" y="1197" font-size="11" fill="#1e293b">certificate_number (text)</text>
+  <text x="52" y="1215" font-size="11" fill="#1e293b">document_path (text)</text>
+  <text x="52" y="1233" font-size="11" fill="#1e293b">created_at / updated_at</text>
+
+  <!-- profile_affiliations -->
+  <rect x="380" y="1080" width="280" height="160" rx="6" fill="#f8fafc" stroke="#475569" stroke-width="1.5"/>
+  <rect x="380" y="1080" width="280" height="28" rx="6" fill="#475569"/>
+  <rect x="380" y="1098" width="280" height="10" fill="#475569"/>
+  <text x="520" y="1099" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">profile_affiliations</text>
+  <text x="392" y="1125" font-size="11" fill="#1e293b">🔑 id (uuid) PK</text>
+  <text x="392" y="1143" font-size="11" fill="#1e293b">🔗 user_id (uuid) FK→auth.users</text>
+  <text x="392" y="1161" font-size="11" fill="#1e293b">organization_name (text)</text>
+  <text x="392" y="1179" font-size="11" fill="#1e293b">membership_id (text)</text>
+  <text x="392" y="1197" font-size="11" fill="#1e293b">proof_path (text)</text>
+  <text x="392" y="1215" font-size="11" fill="#1e293b">created_at / updated_at</text>
+
+  <!-- profile_endorsements -->
+  <rect x="720" y="1080" width="280" height="180" rx="6" fill="#f8fafc" stroke="#475569" stroke-width="1.5"/>
+  <rect x="720" y="1080" width="280" height="28" rx="6" fill="#475569"/>
+  <rect x="720" y="1098" width="280" height="10" fill="#475569"/>
+  <text x="860" y="1099" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">profile_endorsements</text>
+  <text x="732" y="1125" font-size="11" fill="#1e293b">🔑 id (uuid) PK</text>
+  <text x="732" y="1143" font-size="11" fill="#1e293b">🔗 user_id (uuid) FK→auth.users</text>
+  <text x="732" y="1161" font-size="11" fill="#1e293b">municipality (text)</text>
+  <text x="732" y="1179" font-size="11" fill="#1e293b">issuing_office (text)</text>
+  <text x="732" y="1197" font-size="11" fill="#1e293b">date_issued (date)</text>
+  <text x="732" y="1215" font-size="11" fill="#1e293b">endorsement_type (text) CHECK</text>
+  <text x="732" y="1233" font-size="11" fill="#1e293b">document_path / created_at</text>
+
+  <!-- profile_documents -->
+  <rect x="1040" y="1080" width="280" height="140" rx="6" fill="#f8fafc" stroke="#475569" stroke-width="1.5"/>
+  <rect x="1040" y="1080" width="280" height="28" rx="6" fill="#475569"/>
+  <rect x="1040" y="1098" width="280" height="10" fill="#475569"/>
+  <text x="1180" y="1099" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">profile_documents</text>
+  <text x="1052" y="1125" font-size="11" fill="#1e293b">🔑 id (uuid) PK</text>
+  <text x="1052" y="1143" font-size="11" fill="#1e293b">🔗 user_id (uuid) FK→auth.users</text>
+  <text x="1052" y="1161" font-size="11" fill="#1e293b">label (text)</text>
+  <text x="1052" y="1179" font-size="11" fill="#1e293b">document_path (text)</text>
+  <text x="1052" y="1197" font-size="11" fill="#1e293b">created_at / updated_at</text>
+
+  <!-- ==================== RELATIONSHIP LINES ==================== -->
+
+  <!-- auth.users → profiles -->
+  <line x1="620" y1="120" x2="180" y2="160" stroke="#555" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+
+  <!-- auth.users → listings -->
+  <line x1="700" y1="120" x2="520" y2="160" stroke="#555" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+
+  <!-- auth.users → forum_posts -->
+  <line x1="620" y1="120" x2="180" y2="500" stroke="#555" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+
+  <!-- auth.users → forum_comments -->
+  <line x1="660" y1="120" x2="520" y2="500" stroke="#555" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+
+  <!-- auth.users → forum_reactions -->
+  <line x1="700" y1="120" x2="850" y2="500" stroke="#555" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+
+  <!-- auth.users → conversations -->
+  <line x1="640" y1="120" x2="190" y2="780" stroke="#555" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+
+  <!-- auth.users → messages -->
+  <line x1="680" y1="120" x2="530" y2="780" stroke="#555" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+
+  <!-- auth.users → transactions -->
+  <line x1="720" y1="120" x2="860" y2="780" stroke="#555" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+
+  <!-- auth.users → reviews -->
+  <line x1="780" y1="120" x2="1180" y2="780" stroke="#555" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+
+  <!-- auth.users → profile_credentials -->
+  <line x1="600" y1="120" x2="180" y2="1080" stroke="#555" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+
+  <!-- auth.users → profile_affiliations -->
+  <line x1="650" y1="120" x2="520" y2="1080" stroke="#555" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+
+  <!-- auth.users → profile_endorsements -->
+  <line x1="750" y1="120" x2="860" y2="1080" stroke="#555" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+
+  <!-- auth.users → profile_documents -->
+  <line x1="800" y1="120" x2="1180" y2="1080" stroke="#555" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+
+  <!-- listings → listing_images -->
+  <line x1="660" y1="280" x2="720" y2="230" stroke="#555" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- listings → conversations -->
+  <line x1="480" y1="480" x2="190" y2="780" stroke="#555" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- listings → transactions -->
+  <line x1="660" y1="400" x2="860" y2="780" stroke="#555" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- forum_posts → forum_comments -->
+  <line x1="320" y1="580" x2="380" y2="580" stroke="#555" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- forum_posts → forum_images -->
+  <line x1="320" y1="520" x2="1020" y2="560" stroke="#555" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- forum_posts → forum_reactions -->
+  <line x1="320" y1="600" x2="720" y2="580" stroke="#555" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- forum_comments → forum_reactions -->
+  <line x1="660" y1="600" x2="720" y2="590" stroke="#555" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- conversations → messages -->
+  <line x1="340" y1="870" x2="400" y2="860" stroke="#555" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- transactions → reviews -->
+  <line x1="1000" y1="880" x2="1040" y2="880" stroke="#555" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- ==================== LEGEND ==================== -->
+  <rect x="40" y="50" width="260" height="90" rx="6" fill="#f9fafb" stroke="#d1d5db" stroke-width="1"/>
+  <text x="52" y="70" font-size="12" font-weight="bold" fill="#374151">Legend</text>
+  <text x="52" y="88" font-size="11" fill="#1e293b">🔑 Primary Key (PK)</text>
+  <text x="52" y="104" font-size="11" fill="#1e293b">🔗 Foreign Key (FK)</text>
+  <line x1="52" y1="118" x2="100" y2="118" stroke="#555" stroke-width="1.2" stroke-dasharray

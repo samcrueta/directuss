@@ -1,0 +1,77 @@
+name: lumina
+
+services:
+  directus:
+    image: directus/directus:12.5.1
+    restart: unless-stopped
+    ports:
+      - "8055:8055"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./data/database:/directus/database:Z
+      - ./data/uploads:/directus/uploads:Z
+      - ./extensions:/directus/extensions:Z
+      - ./seed:/seed:ro,Z
+      - ../frontend/content:/content:ro,Z
+    environment:
+      KEY: ${DIRECTUS_KEY}
+      SECRET: ${DIRECTUS_SECRET}
+      ADMIN_EMAIL: ${DIRECTUS_ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${DIRECTUS_ADMIN_PASSWORD}
+      ADMIN_TOKEN: ${DIRECTUS_ADMIN_TOKEN}
+
+      DB_CLIENT: sqlite3
+      DB_FILENAME: /directus/database/data.db
+
+      PUBLIC_URL: ${DIRECTUS_PUBLIC_URL:-http://localhost:8055}
+      CORS_ENABLED: "true"
+      CORS_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
+      WEBSOCKETS_ENABLED: "true"
+      WEBSOCKETS_REST_AUTH: public
+
+      MOCK_API_URL: ${MOCK_API_URL:-http://web:3000}
+      LAB_SECRET: ${LAB_SECRET}
+      FLOWS_ENV_ALLOW_LIST: MOCK_API_URL,LAB_SECRET
+      IMPORT_IP_DENY_LIST: "169.254.169.254"
+      DIRECTUS_TOKEN: ${DIRECTUS_ADMIN_TOKEN}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:8055/server/ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  web:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+      DIRECTUS_URL: http://directus:8055
+      DIRECTUS_TOKEN: ${DIRECTUS_ADMIN_TOKEN}
+      DIRECTUS_PUBLIC_URL: ${DIRECTUS_PUBLIC_URL:-http://localhost:8055}
+      DIRECTUS_WS_URL: ${DIRECTUS_WS_URL:-}
+      LAB_SECRET: ${LAB_SECRET}
+      PAYLOAD_URL: ${PAYLOAD_URL:-http://host.docker.internal:3002}
+      PAYLOAD_PUBLIC_URL: ${PAYLOAD_PUBLIC_URL:-http://localhost:3002}
+      PAYLOAD_API_KEY: ${PAYLOAD_API_KEY}
+      KEYSTONE_URL: ${KEYSTONE_URL:-http://host.docker.internal:3003}
+      KEYSTONE_PUBLIC_URL: ${KEYSTONE_PUBLIC_URL:-http://localhost:3003}
+      KEYSTONE_SECRET: ${KEYSTONE_SECRET}
+    depends_on:
+      directus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:3000/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
