@@ -1,6 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
+  allowedDevOrigins: [
+    "192.168.*.*",
+    "10.*.*.*",
+    "169.254.*.*",
+    ...Array.from({ length: 16 }, (_, index) => `172.${index + 16}.*.*`)
+  ],
   images: {
     remotePatterns: [
       {
